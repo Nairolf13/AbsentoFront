@@ -4,7 +4,7 @@ import useAuth from "../../hooks/useAuth";
 import axios from "axios";
 import 'react-calendar/dist/Calendar.css';
 
-const API_URL = import.meta.env.API_URL;
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default function AbsenceCalendar() {
   const [absences, setAbsences] = useState([]);
