@@ -21,6 +21,29 @@ export default function EmployeeAdmin() {
   const [singleError, setSingleError] = useState("");
   const [singleSuccess, setSingleSuccess] = useState("");
   const [singleLoading, setSingleLoading] = useState(false);
+  const [employees, setEmployees] = useState([]);
+  const [loadingEmployees, setLoadingEmployees] = useState(false);
+  const [errorEmployees, setErrorEmployees] = useState("");
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoadingEmployees(true);
+      setErrorEmployees("");
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/utilisateur/entreprise/employes`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error('Erreur lors de la récupération des employés');
+        const data = await res.json();
+        setEmployees(data);
+      } catch (e) {
+        setErrorEmployees("Erreur lors de la récupération des employés.");
+      } finally {
+        setLoadingEmployees(false);
+      }
+    };
+    if (token) fetchData();
+  }, [token]);
 
   if (!user || user.role !== "ADMIN") {
     return <div className="text-center mt-16 text-red-500 font-bold">Accès réservé aux administrateurs.</div>;
@@ -171,7 +194,42 @@ export default function EmployeeAdmin() {
         {/* Section Liste des employés */}
         <div className="w-full mb-8">
           <h3 className="font-semibold text-lg mb-2 text-center">Liste des employés</h3>
-          <div>Il n'y a pas d'employés à afficher.</div>
+          {loadingEmployees ? (
+            <div>Chargement…</div>
+          ) : errorEmployees ? (
+            <div className="text-red-500 text-center">{errorEmployees}</div>
+          ) : employees.length === 0 ? (
+            <div>Il n'y a pas d'employés à afficher.</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full bg-white border border-gray-200 rounded-xl">
+                <thead>
+                  <tr>
+                    <th className="py-2 px-3 border-b">Nom</th>
+                    <th className="py-2 px-3 border-b">Prénom</th>
+                    <th className="py-2 px-3 border-b">Email</th>
+                    <th className="py-2 px-3 border-b">Téléphone</th>
+                    <th className="py-2 px-3 border-b">Poste</th>
+                    <th className="py-2 px-3 border-b">Rôle</th>
+                    <th className="py-2 px-3 border-b">Entreprise</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {employees.map(emp => (
+                    <tr key={emp.id} className="text-center">
+                      <td className="py-2 px-3 border-b">{emp.nom}</td>
+                      <td className="py-2 px-3 border-b">{emp.prenom}</td>
+                      <td className="py-2 px-3 border-b">{emp.email}</td>
+                      <td className="py-2 px-3 border-b">{emp.telephone}</td>
+                      <td className="py-2 px-3 border-b">{emp.poste}</td>
+                      <td className="py-2 px-3 border-b">{emp.role}</td>
+                      <td className="py-2 px-3 border-b">{emp.entreprise?.nom}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
         {/* Section Ajout Manuel */}
         <div className="w-full">
