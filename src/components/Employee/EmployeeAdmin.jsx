@@ -183,6 +183,10 @@ export default function EmployeeAdmin() {
     }
   };
 
+  const getExistingEmails = () => {
+    return new Set(employees.map(e => e.email.toLowerCase()));
+  };
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-accent py-12">
       <div className="w-full  mx-auto relative">
@@ -275,18 +279,6 @@ export default function EmployeeAdmin() {
                     Colonnes attendues : nom, prenom, email, telephone, dateNaissance (YYYY-MM-DD), adresse, poste, role (EMPLOYE ou ADMIN)
                   </div>
                 </div>
-                {csvData && csvData.length > 0 && (
-                  <button
-                    className="mt-4 w-full bg-primary text-white font-bold py-3 rounded-xl hover:bg-primary/80 transition"
-                    onClick={handleCsvAdd}
-                    disabled={csvLoading}
-                  >
-                    Ajouter {csvData.length} employé(s)
-                  </button>
-                )}
-                {csvLoading && <div className="text-primary mt-2">Chargement…</div>}
-                {csvError && <div className="text-red-500 text-center mt-2">{csvError}</div>}
-                {csvSuccess && <div className="text-green-600 text-center mt-2">{csvSuccess}</div>}
               </div>
               {/* Section Ajout Manuel */}
               <div className="w-full">
@@ -307,12 +299,81 @@ export default function EmployeeAdmin() {
                   </select>
                   <button className="w-full bg-primary text-white font-bold py-3 rounded-xl hover:bg-primary/80 transition" type="submit" disabled={singleLoading}>Ajouter</button>
                   {singleError && <div className="text-xs text-red-500 text-center mt-2 w-full">{singleError}</div>}
-                  {singleSuccess && <div className="text-xs text-green-600 text-center mt-2 w-full">{singleSuccess}</div>}
+                  {singleSuccess && <div className="text-xs text-green-600 text-center mt-2">{singleSuccess}</div>}
                 </form>
               </div>
             </div>
           </div>
         )}
+        {csvData && csvData.length > 0 && (() => {
+          const existingEmails = getExistingEmails();
+          // Trie : d'abord ceux qui peuvent être ajoutés (vert), ensuite ceux déjà existants (rouge)
+          const sortedRows = [...csvData].sort((a, b) => {
+            const aExists = existingEmails.has((a.email || '').toLowerCase());
+            const bExists = existingEmails.has((b.email || '').toLowerCase());
+            if (aExists === bExists) return 0;
+            return aExists ? 1 : -1;
+          });
+          return (
+            <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/50">
+              <div className="bg-white rounded-2xl shadow-2xl px-8 py-10 w-full max-w-3xl mx-auto relative animate-fade-in">
+                <button className="absolute top-4 right-4 text-gray-400 hover:text-red-500 text-2xl font-bold" onClick={() => setCsvData(null)} aria-label="Fermer">×</button>
+                <h4 className="font-semibold text-lg mb-4 text-center">Employés détectés dans le CSV</h4>
+                <div className="overflow-x-auto max-h-[50vh]">
+                  <table className="w-full bg-white border border-gray-200 rounded-xl text-sm">
+                    <thead>
+                      <tr>
+                        <th className="py-2 px-3 border-b">Nom</th>
+                        <th className="py-2 px-3 border-b">Prénom</th>
+                        <th className="py-2 px-3 border-b">Email</th>
+                        <th className="py-2 px-3 border-b">Téléphone</th>
+                        <th className="py-2 px-3 border-b">Adresse</th>
+                        <th className="py-2 px-3 border-b">Date de naissance</th>
+                        <th className="py-2 px-3 border-b">Poste</th>
+                        <th className="py-2 px-3 border-b">Rôle</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sortedRows.map((row, idx) => {
+                        const isExisting = existingEmails.has((row.email || '').toLowerCase());
+                        return (
+                          <tr key={idx} className={`text-center ${isExisting ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                            <td className="py-2 px-3 border-b whitespace-nowrap">{row.nom}</td>
+                            <td className="py-2 px-3 border-b whitespace-nowrap">{row.prenom}</td>
+                            <td className="py-2 px-3 border-b whitespace-nowrap">{row.email}</td>
+                            <td className="py-2 px-3 border-b whitespace-nowrap">{row.telephone}</td>
+                            <td className="py-2 px-3 border-b whitespace-nowrap">{row.adresse}</td>
+                            <td className="py-2 px-3 border-b whitespace-nowrap">{row.dateNaissance}</td>
+                            <td className="py-2 px-3 border-b whitespace-nowrap">{row.poste}</td>
+                            <td className="py-2 px-3 border-b whitespace-nowrap">{row.role}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="mt-4 flex flex-col items-center">
+                  <div className="flex gap-4 items-center mb-2">
+                    <span className="inline-block w-4 h-4 rounded bg-green-200 border border-green-600 mr-1"></span>
+                    <span className="text-green-700 text-sm">Peut être ajouté</span>
+                    <span className="inline-block w-4 h-4 rounded bg-red-200 border border-red-600 ml-6 mr-1"></span>
+                    <span className="text-red-700 text-sm">Déjà existant (ne sera pas ajouté)</span>
+                  </div>
+                </div>
+                <button
+                  className="mt-6 w-full bg-primary text-white font-bold py-3 rounded-xl hover:bg-primary/80 transition"
+                  onClick={handleCsvAdd}
+                  disabled={csvLoading}
+                >
+                  Valider et ajouter {csvData.length} employé(s)
+                </button>
+                {csvLoading && <div className="text-primary mt-2 font-semibold animate-pulse">Envoi des emails de bienvenue aux employés en cours…</div>}
+                {csvError && <div className="text-red-500 text-center mt-2">{csvError}</div>}
+                {csvSuccess && <div className="text-green-600 text-center mt-2">{csvSuccess}</div>}
+              </div>
+            </div>
+          );
+        })()}
         {editEmp && (
           <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40">
             <div className="bg-white rounded-2xl shadow-2xl px-8 py-10 w-full max-w-xl mx-auto relative animate-fade-in">
