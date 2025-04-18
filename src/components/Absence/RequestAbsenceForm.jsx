@@ -15,48 +15,56 @@ export default function RequestAbsenceForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(""); setSuccess("");
-    console.log('Token utilisé pour la déclaration d\'absence:', token);
     try {
       await requestAbsence({ date, heureDebut, heureFin, type, motif }, token);
-      setSuccess("Absence request submitted!");
+      setSuccess("Demande d'absence envoyée !");
     } catch (err) {
       if (err.response && err.response.data && err.response.data.message) {
         setError(err.response.data.message);
-        console.error('Erreur backend:', err.response.data.message);
-        if (err.response.data.body) {
-          console.error('Body reçu par le backend:', err.response.data.body);
-        }
       } else {
-        setError("Error submitting absence");
-        console.error('Erreur inconnue:', err);
+        setError("Erreur lors de la soumission");
       }
     }
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow p-6 max-w-md mx-auto mt-10">
-      <h3 className="font-semibold text-xl mb-4">Request Absence</h3>
-      <form onSubmit={handleSubmit}>
-        <label className="block mb-2">Date</label>
-        <input type="date" className="input mb-4" value={date} onChange={e => setDate(e.target.value)} />
-        <label className="block mb-2">Heure début</label>
-        <input type="time" className="input mb-4" value={heureDebut} onChange={e => setHeureDebut(e.target.value)} />
-        <label className="block mb-2">Heure fin</label>
-        <input type="time" className="input mb-4" value={heureFin} onChange={e => setHeureFin(e.target.value)} />
-        <label className="block mb-2">Type</label>
-        <select className="input mb-4" value={type} onChange={e => setType(e.target.value)}>
-          <option value="">Type</option>
-          <option value="CONGE">Leave</option>
-          <option value="MALADIE">Sick</option>
-          <option value="RTT">RTT</option>
-          <option value="AUTRE">Other</option>
-        </select>
-        <label className="block mb-2">Motif</label>
-        <textarea className="input mb-4" rows={2} value={motif} onChange={e => setMotif(e.target.value)} />
-        <button className="btn-primary w-full" type="submit">Submit</button>
-        {success && <div className="text-xs text-green-600 mt-2 text-center">{success}</div>}
-        {error && <div className="text-xs text-red-500 mt-2 text-center">{error}</div>}
-      </form>
+    <div className="min-h-screen flex items-center justify-center bg-accent">
+      <div className="bg-white rounded-2xl shadow-lg px-8 py-10 w-full max-w-md mx-auto flex flex-col items-center">
+        <h3 className="font-semibold text-2xl mb-6 text-primary text-center">Déclarer une absence</h3>
+        <form onSubmit={handleSubmit} className="space-y-4 w-full flex flex-col items-center">
+          <div className="w-full">
+            <label className="block mb-1 text-secondary text-center">Date</label>
+            <input type="date" className="block w-full rounded-xl border border-primary px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-700" value={date} onChange={e => setDate(e.target.value)} required />
+          </div>
+          <div className="flex gap-4 w-full">
+            <div className="flex-1">
+              <label className="block mb-1 text-secondary text-center">Heure début</label>
+              <input type="time" className="block w-full rounded-xl border border-primary px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-700" value={heureDebut} onChange={e => setHeureDebut(e.target.value)} required />
+            </div>
+            <div className="flex-1">
+              <label className="block mb-1 text-secondary text-center">Heure fin</label>
+              <input type="time" className="block w-full rounded-xl border border-primary px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-700" value={heureFin} onChange={e => setHeureFin(e.target.value)} required />
+            </div>
+          </div>
+          <div className="w-full">
+            <label className="block mb-1 text-secondary text-center">Type</label>
+            <select className="block w-full rounded-xl border border-primary px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-700" value={type} onChange={e => setType(e.target.value)} required>
+              <option value="">Type</option>
+              <option value="CONGE">Congé</option>
+              <option value="MALADIE">Maladie</option>
+              <option value="RTT">RTT</option>
+              <option value="AUTRE">Autre</option>
+            </select>
+          </div>
+          <div className="w-full">
+            <label className="block mb-1 text-secondary text-center">Motif</label>
+            <textarea className="block w-full rounded-xl border border-primary px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-700" rows={2} value={motif} onChange={e => setMotif(e.target.value)} />
+          </div>
+          <button className="w-full bg-primary text-white font-bold py-3 rounded-xl hover:bg-primary/80 transition" type="submit">Envoyer</button>
+          {success && <div className="text-xs text-green-600 text-center mt-2 w-full">{success}</div>}
+          {error && <div className="text-xs text-red-500 text-center mt-2 w-full">{error}</div>}
+        </form>
+      </div>
     </div>
   );
 }

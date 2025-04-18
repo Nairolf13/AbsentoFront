@@ -9,32 +9,32 @@ export default function Notifications() {
   useSocket((event, payload) => {
     if (event === "nouveau_remplacement") {
       setNotifications(n => [
-        { text: "A replacement has assigned for your absent shift." },
+        { text: "Un remplaçant a été assigné à votre absence." },
         ...n
       ]);
     }
     if (event === "remplacement_valide") {
       setNotifications(n => [
-        { text: "Your absence request has been approved." },
+        { text: "Votre demande d'absence a été validée." },
         ...n
       ]);
     }
     if (event === "remplacement_refuse") {
       setNotifications(n => [
-        { text: "A replacement request has been refused." },
+        { text: "Une demande de remplacement a été refusée." },
         ...n
       ]);
     }
   });
 
   return (
-    <div className="bg-white rounded-2xl shadow p-6 max-w-xs mx-auto mt-10">
-      <h4 className="font-semibold mb-4">Notifications</h4>
-      <ul>
+    <div className="bg-white rounded-2xl shadow-lg px-8 py-10 w-full max-w-xs mx-auto">
+      <h4 className="font-semibold text-xl mb-4 text-primary text-center">Notifications</h4>
+      <ul className="divide-y divide-accent">
         {notifications.map((n, i) => (
-          <li key={i} className="mb-3 flex items-center">
-            <span className="h-2 w-2 bg-primary rounded-full mr-2"></span>
-            <span className="text-sm">{n.text}</span>
+          <li key={i} className="py-3 flex items-center gap-3">
+            <span className="h-2 w-2 bg-primary rounded-full"></span>
+            <span className="text-sm text-gray-700">{n.text}</span>
           </li>
         ))}
       </ul>

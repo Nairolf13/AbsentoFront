@@ -24,9 +24,9 @@ export default function SuggestReplacement() {
     setError(""); setSuccess("");
     try {
       await assignReplacement(remplacementId, token);
-      setSuccess("Replacement assigned and validated!");
+      setSuccess("Remplaçant assigné et validé !");
     } catch {
-      setError("Error assigning replacement");
+      setError("Erreur lors de l'assignation");
     }
   };
 
@@ -34,35 +34,37 @@ export default function SuggestReplacement() {
     setError(""); setSuccess("");
     try {
       await refuseReplacement(remplacementId, token);
-      setSuccess("Replacement refused.");
+      setSuccess("Remplacement refusé.");
     } catch {
-      setError("Error refusing replacement");
+      setError("Erreur lors du refus");
     }
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow p-6 max-w-md mx-auto mt-10">
-      <h3 className="font-semibold text-xl mb-4">Suggest Replacement</h3>
-      <div className="mb-4 text-secondary">A replacement has been generated based on the defined criteria.</div>
-      <ul>
-        {replacements.map((r, i) => (
-          <li key={i} className="flex justify-between items-center p-2 border-b last:border-b-0">
-            <div>
-              <span className="font-medium">{r.name}</span>
-              <div className="text-xs text-secondary">{r.role}</div>
-            </div>
-            <span className="text-xs">{r.when}</span>
-            {r.remplacementId && (
-              <>
-                <button className="btn-primary ml-4" onClick={() => handleAssign(r.remplacementId)}>Assign</button>
-                <button className="btn-secondary ml-2" onClick={() => handleRefuse(r.remplacementId)}>Refuse</button>
-              </>
-            )}
-          </li>
-        ))}
-      </ul>
-      {success && <div className="text-xs text-green-600 mt-4 text-center">{success}</div>}
-      {error && <div className="text-xs text-red-500 mt-4 text-center">{error}</div>}
+    <div className="min-h-screen flex items-center justify-center bg-accent">
+      <div className="bg-white rounded-2xl shadow-lg px-8 py-10 w-full max-w-md mx-auto flex flex-col items-center">
+        <h3 className="font-semibold text-2xl mb-6 text-primary text-center">Suggestion de remplaçants</h3>
+        <div className="mb-4 text-secondary text-center w-full">Voici les remplaçants disponibles selon vos critères.</div>
+        <ul className="divide-y divide-accent w-full">
+          {replacements.map((r, i) => (
+            <li key={i} className="flex flex-col md:flex-row md:justify-between md:items-center py-4 w-full">
+              <div>
+                <span className="font-medium text-base text-gray-800">{r.name}</span>
+                <div className="text-xs text-secondary">{r.role}</div>
+              </div>
+              <span className="text-xs text-gray-500 mt-2 md:mt-0">{r.when}</span>
+              {r.remplacementId && (
+                <div className="flex mt-2 md:mt-0 md:ml-4 gap-2">
+                  <button className="bg-primary text-white rounded-xl px-4 py-2 text-xs font-semibold hover:bg-primary/80 transition" onClick={() => handleAssign(r.remplacementId)}>Assigner</button>
+                  <button className="bg-secondary text-white rounded-xl px-4 py-2 text-xs font-semibold hover:bg-secondary/80 transition" onClick={() => handleRefuse(r.remplacementId)}>Refuser</button>
+                </div>
+              )}
+            </li>
+          ))}
+        </ul>
+        {success && <div className="text-xs text-green-600 text-center mt-4 w-full">{success}</div>}
+        {error && <div className="text-xs text-red-500 text-center mt-4 w-full">{error}</div>}
+      </div>
     </div>
   );
 }

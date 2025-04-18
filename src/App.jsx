@@ -8,7 +8,9 @@ import Dashboard from "./components/Dashboard/Dashboard";
 import HeaderWithAuth from "./components/Layout/HeaderWithAuth";
 import PrivateRoute from "./components/Layout/PrivateRoute";
 import HomePage from "./pages/HomePage";
+import CreatePassword from "./pages/CreatePassword";
 import useAuth from "./hooks/useAuth";
+import EmployeeAdmin from "./components/Employee/EmployeeAdmin";
 
 function AppContent() {
   const { pathname } = useLocation();
@@ -24,6 +26,8 @@ function AppContent() {
         <Route path="/absence/request" element={<PrivateRoute><RequestAbsenceForm /></PrivateRoute>} />
         <Route path="/absence/suggest" element={<PrivateRoute><SuggestReplacement replacements={[]} /></PrivateRoute>} />
         <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+        <Route path="/admin/employes" element={<PrivateRoute><EmployeeAdmin /></PrivateRoute>} />
+        <Route path="/creer-mot-de-passe" element={<CreatePassword />} />
         <Route path="/" element={<HomePage />} />
         <Route path="*" element={<Navigate to="/login" />} />
       </Routes>

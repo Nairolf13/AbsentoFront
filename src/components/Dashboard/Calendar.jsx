@@ -40,8 +40,8 @@ export default function AbsenceCalendar() {
       const d = new Date(r.date);
       return d.toDateString() === date.toDateString();
     });
-    if (isAbsence) return "bg-primary text-white rounded-full";
-    if (isReplacement) return "bg-accent rounded-full";
+    if (isAbsence) return "!bg-primary !text-white rounded-full";
+    if (isReplacement) return "!bg-accent rounded-full";
     return "";
   };
 
@@ -54,42 +54,38 @@ export default function AbsenceCalendar() {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow p-6 max-w-md mx-auto mt-10">
-      <h3 className="font-semibold text-xl mb-4">My Absences & Replacements</h3>
+    <div className="bg-white rounded-2xl shadow-lg px-6 py-8 w-full">
+      <h3 className="font-semibold text-xl mb-4 text-primary text-center">Mes absences & remplacements</h3>
       {loading ? (
         <div className="flex justify-center items-center h-40">
           <span className="loader"></span>
-          <span className="ml-2 text-secondary">Loading...</span>
+          <span className="ml-2 text-secondary">Chargement…</span>
         </div>
       ) : (
         <Calendar tileClassName={tileClassName} onClickDay={handleDayClick} />
       )}
-      <div className="flex gap-4 text-xs mt-4">
+      <div className="flex gap-4 text-xs mt-4 justify-center">
         <span className="inline-block h-2 w-2 bg-primary rounded-full mr-1"></span> Absence
-        <span className="inline-block h-2 w-2 bg-accent rounded-full mx-1"></span> Replacement
+        <span className="inline-block h-2 w-2 bg-accent rounded-full mx-1 border border-primary"></span> Remplacement
       </div>
       {selected && (
         <div className="mt-6 p-4 rounded-xl bg-accent/50">
           {selected.type === "absence" ? (
             <>
               <div className="font-semibold mb-1">Absence</div>
-              <div>Date: {new Date(selected.date).toLocaleDateString()}</div>
-              <div>Type: {selected.typeAbsence || selected.type}</div>
-              <div>Reason: {selected.reason}</div>
+              <div>Date : {new Date(selected.date).toLocaleDateString()}</div>
+              <div>Type : {selected.typeAbsence || selected.type}</div>
+              <div>Motif : {selected.reason || selected.motif}</div>
             </>
           ) : (
             <>
-              <div className="font-semibold mb-1">Replacement</div>
-              <div>Date: {new Date(selected.date).toLocaleDateString()}</div>
-              <div>For: {selected.absentName || selected.for}</div>
+              <div className="font-semibold mb-1">Remplacement</div>
+              <div>Date : {new Date(selected.date).toLocaleDateString()}</div>
+              <div>Remplaçant : {selected.name}</div>
             </>
           )}
         </div>
       )}
-      <style>{`
-        .loader { border: 4px solid #e5e7eb; border-top: 4px solid #2563eb; border-radius: 50%; width: 28px; height: 28px; animation: spin 1s linear infinite; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-      `}</style>
     </div>
   );
 }

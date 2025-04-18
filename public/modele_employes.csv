@@ -1,0 +1,3 @@
+nom,prenom,email,telephone,dateNaissance,adresse,poste,role
+Dupont,Jean,jean.dupont@email.com,0601020304,1985-04-25,12 rue de Paris,Développeur,EMPLOYE
+Martin,Sophie,sophie.martin@email.com,0605060708,1990-09-12,34 avenue Victor Hugo,Manager,ADMIN

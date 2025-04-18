@@ -3,15 +3,15 @@ import { getMyAbsences, validateAbsence, refuseAbsence } from "../../api/absento
 import useAuth from "../../hooks/useAuth";
 
 const statusColors = {
-  "En attente": "#facc15",
-  "Validée": "#22c55e",
-  "Refusée": "#ef4444",
+  "En attente": "bg-yellow-300 text-yellow-900",
+  "Validée": "bg-green-400 text-white",
+  "Refusée": "bg-red-400 text-white",
 };
 
 const remplacementStatusColors = {
-  "Aucun": "#d1d5db",
-  "En cours": "#facc15",
-  "Validé": "#22c55e",
+  "Aucun": "bg-gray-300 text-gray-700",
+  "En cours": "bg-yellow-300 text-yellow-900",
+  "Validé": "bg-green-400 text-white",
 };
 
 export default function HistoriqueAbsences() {
@@ -22,8 +22,6 @@ export default function HistoriqueAbsences() {
   const [selectedAbsence, setSelectedAbsence] = useState(null);
   const [remplacantId, setRemplacantId] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
-  // TODO: charger la liste des utilisateurs/remplaçants possibles
-  // const [remplacants, setRemplacants] = useState([]);
 
   useEffect(() => {
     if (!token) return;
@@ -46,7 +44,6 @@ export default function HistoriqueAbsences() {
   const handleOpenModifier = (absence) => {
     setSelectedAbsence(absence);
     setRemplacantId("");
-    // TODO: charger les remplaçants possibles ici si besoin
   };
 
   const handleChangeRemplacant = async () => {
@@ -63,71 +60,67 @@ export default function HistoriqueAbsences() {
     }
   };
 
-  if (loading) return <div>Chargement…</div>;
-  if (error) return <div>Erreur lors du chargement</div>;
+  if (loading) return <div className="text-center text-secondary py-8">Chargement…</div>;
+  if (error) return <div className="text-center text-red-500 py-8">Erreur lors du chargement</div>;
 
   return (
-    <div style={{ padding: 24 }}>
-      <h2>Historique de mes absences</h2>
-      {loading ? (
-        <div>Chargement...</div>
-      ) : absences.length === 0 ? (
-        <div>Aucune absence soumise.</div>
-      ) : (
-        <table style={{ width: "100%", marginTop: 16, borderCollapse: "collapse" }}>
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Début</th>
-              <th>Fin</th>
-              <th>Type</th>
-              <th>Motif</th>
-              <th>Status</th>
-              <th>Remplacement</th>
-              {user?.role === "ADMIN" && <th>Action</th>}
-            </tr>
-          </thead>
-          <tbody>
-            {absences.map((a) => (
-              <tr key={a.id} style={{ borderBottom: "1px solid #e5e7eb" }}>
-                <td>{new Date(a.startDate).toLocaleDateString()}</td>
-                <td>{new Date(a.startDate).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</td>
-                <td>{new Date(a.endDate).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</td>
-                <td>{a.type}</td>
-                <td>{a.reason || "-"}</td>
-                <td>
-                  <span style={{ background: statusColors[a.status] || "#ddd", color: "#222", padding: "2px 8px", borderRadius: 4 }}>
-                    {a.status}
-                  </span>
-                </td>
-                <td>
-                  <span style={{ background: a.remplacementStatus ? (remplacementStatusColors[a.remplacementStatus] || "#ddd") : "#d1d5db", color: "#222", padding: "2px 8px", borderRadius: 4 }}>
-                    {a.remplacementStatus || "Aucun"}
-                  </span>
-                </td>
-                {user?.role === "ADMIN" && (
-                  <td>
-                    {a.status === "En attente" && (
-                      <>
-                        <button onClick={() => handleValidate(a.id)} style={{ color: "green", marginRight: 8 }}>Valider</button>
-                        <button onClick={() => handleOpenModifier(a)} style={{ color: "#2563eb" }}>Modifier remplaçant</button>
-                      </>
+    <div className="bg-white rounded-2xl shadow-lg px-6 py-8 w-full max-w-5xl mx-auto">
+        <h2 className="text-xl font-bold mb-6 text-primary text-center">Historique de mes absences</h2>
+        {absences.length === 0 ? (
+          <div className="text-secondary text-center">Aucune absence soumise.</div>
+        ) : (
+        <div className="overflow-x-auto max-w-5xl">
+            <table className="min-w-full text-sm text-left">
+              <thead>
+                <tr className="bg-accent text-secondary">
+                  <th className="py-2 px-3">Date</th>
+                  <th className="py-2 px-3">Début</th>
+                  <th className="py-2 px-3">Fin</th>
+                  <th className="py-2 px-3">Type</th>
+                  <th className="py-2 px-3">Motif</th>
+                  <th className="py-2 px-3">Statut</th>
+                  <th className="py-2 px-3">Remplacement</th>
+                  {user?.role === "ADMIN" && <th className="py-2 px-3">Actions</th>}
+                </tr>
+              </thead>
+              <tbody>
+                {absences.map((a) => (
+                  <tr key={a.id} className="border-b last:border-b-0">
+                    <td className="py-2 px-3">{new Date(a.startDate).toLocaleDateString()}</td>
+                    <td className="py-2 px-3">{new Date(a.startDate).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</td>
+                    <td className="py-2 px-3">{new Date(a.endDate).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</td>
+                    <td className="py-2 px-3">{a.type}</td>
+                    <td className="py-2 px-3">{a.reason || "-"}</td>
+                    <td className="py-2 px-3">
+                      <span className={`px-2 py-1 rounded-xl text-xs font-semibold ${statusColors[a.status] || "bg-gray-200 text-gray-700"}`}>{a.status}</span>
+                    </td>
+                    <td className="py-2 px-3">
+                      <span className={`px-2 py-1 rounded-xl text-xs font-semibold ${remplacementStatusColors[a.remplacementStatus] || "bg-gray-200 text-gray-700"}`}>{a.remplacementStatus || "Aucun"}</span>
+                    </td>
+                    {user?.role === "ADMIN" && (
+                      <td className="py-2 px-3">
+                        {a.status === "En attente" && (
+                          <>
+                            <button className="bg-primary text-white rounded-xl px-3 py-1 text-xs font-bold hover:bg-primary/80 transition" onClick={() => handleValidate(a.id)}>Valider</button>
+                            <button className="bg-blue-500 text-white rounded-xl px-3 py-1 text-xs font-bold hover:bg-blue-500/80 transition ml-2" onClick={() => handleOpenModifier(a)}>Modifier remplaçant</button>
+                          </>
+                        )}
+                      </td>
                     )}
-                  </td>
-                )}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-      {selectedAbsence && (
-        <div style={{ marginTop: 24, background: "#f3f4f6", padding: 16, borderRadius: 8 }}>
-          <h3>Modifier le remplaçant pour l'absence du {new Date(selectedAbsence.startDate).toLocaleDateString()}</h3>
-          <input type="text" placeholder="ID du remplaçant" value={remplacantId} onChange={e => setRemplacantId(e.target.value)} style={{ marginRight: 8 }} />
-          <button onClick={handleChangeRemplacant} disabled={actionLoading || !remplacantId} style={{ color: "green" }}>Valider le changement</button>
-          <button onClick={() => setSelectedAbsence(null)} style={{ marginLeft: 8 }}>Annuler</button>
-        </div>
-      )}
-    </div>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        {selectedAbsence && (
+        <div className="mt-6">
+          <h3 className="text-lg font-bold mb-2">Modifier le remplaçant pour l'absence du {new Date(selectedAbsence.startDate).toLocaleDateString()}</h3>
+          <input type="text" placeholder="ID du remplaçant" value={remplacantId} onChange={e => setRemplacantId(e.target.value)} className="py-2 px-3 border border-gray-300 rounded-lg w-full" />
+          <button className="bg-primary text-white rounded-xl px-3 py-1 text-xs font-bold hover:bg-primary/80 transition mt-2" onClick={handleChangeRemplacant} disabled={actionLoading || !remplacantId}>Valider le changement</button>
+          <button className="bg-gray-200 text-gray-700 rounded-xl px-3 py-1 text-xs font-bold hover:bg-gray-200/80 transition mt-2 ml-2" onClick={() => setSelectedAbsence(null)}>Annuler</button>
+          </div>
+        )}
+      </div>
   );
 }

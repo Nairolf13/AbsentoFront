@@ -79,3 +79,10 @@ export const refuseAbsence = async (absenceId, token) => {
   });
   return data;
 };
+
+// export const getEmployesEntreprise = async (token) => {
+//   const { data } = await axios.get(`${API_URL}/admin/employes`, {
+//     headers: { Authorization: `Bearer ${token}` },
+//   });
+//   return data;
+// };
