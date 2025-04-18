@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-route
 import LoginForm from "./components/Auth/LoginForm";
 import RegisterForm from "./components/Auth/RegisterForm";
 import RequestAbsenceForm from "./components/Absence/RequestAbsenceForm";
-import SuggestReplacement from "./components/Absence/SuggestReplacement";
+import RemplacementSuggestPage from "./pages/RemplacementSuggest";
 import Dashboard from "./components/Dashboard/Dashboard";
 import HeaderWithAuth from "./components/Layout/HeaderWithAuth";
 import PrivateRoute from "./components/Layout/PrivateRoute";
@@ -24,7 +24,7 @@ function AppContent() {
         <Route path="/login" element={<LoginForm />} />
         <Route path="/register" element={<RegisterForm />} />
         <Route path="/absence/request" element={<PrivateRoute><RequestAbsenceForm /></PrivateRoute>} />
-        <Route path="/absence/suggest" element={<PrivateRoute><SuggestReplacement replacements={[]} /></PrivateRoute>} />
+        <Route path="/absence/suggest" element={<PrivateRoute><RemplacementSuggestPage /></PrivateRoute>} />
         <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
         <Route path="/admin/employes" element={<PrivateRoute><EmployeeAdmin /></PrivateRoute>} />
         <Route path="/creer-mot-de-passe" element={<CreatePassword />} />

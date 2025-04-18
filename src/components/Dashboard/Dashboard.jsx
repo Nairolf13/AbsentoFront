@@ -29,7 +29,7 @@ export default function Dashboard() {
           </button>
         )}
       </div>
-      <div className="w-full max-w-xl">
+      <div className="w-full">
         {tab === "calendar" && <Calendar />}
         {tab === "historique" && <HistoriqueAbsences />}
         {tab === "notifications" && <Notifications />}
