@@ -63,23 +63,43 @@ export default function EmployeeAdmin() {
   const handleCsvAdd = async () => {
     if (!csvData || csvData.length === 0) return;
     setCsvError(""); setCsvSuccess(""); setCsvLoading(true);
-    try {
-      // Appel API pour chaque employé
-      const res = await Promise.all(csvData.map(row =>
-        fetch(`${import.meta.env.VITE_API_URL}/password/invite`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
-          },
-          body: JSON.stringify(row)
-        })
-      ));
-      const failed = res.filter(r => !r.ok);
-      if (failed.length > 0) {
-        setCsvError(`${failed.length} employés n'ont pas pu être importés.`);
+    // Validation côté frontend
+    const requiredFields = ["nom", "prenom", "email", "telephone", "dateNaissance", "adresse", "poste", "role"];
+    const validRows = [];
+    const invalidRows = [];
+    csvData.forEach(row => {
+      const hasAllFields = requiredFields.every(f => row[f]);
+      const dateObj = new Date(row.dateNaissance);
+      if (!hasAllFields || isNaN(dateObj.getTime())) {
+        invalidRows.push(row.email || "(email manquant)");
       } else {
-        setCsvSuccess("Tous les employés ont été importés et les invitations envoyées !");
+        validRows.push(row);
+      }
+    });
+    if (validRows.length === 0) {
+      setCsvError(`Aucun employé valide à importer. ${invalidRows.length} lignes invalides (champs manquants ou date incorrecte) : ${invalidRows.join(", ")}`);
+      setCsvLoading(false);
+      return;
+    }
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/password/invite`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify(validRows)
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setCsvError(data.message || "Erreur lors de l'import des employés.");
+      } else {
+        let msg = "";
+        if (data.created?.length) msg += `${data.created.length} employés importés : ${data.created.join(", ")}.\n`;
+        if (data.ignored?.length) msg += `${data.ignored.length} déjà existants ignorés : ${data.ignored.join(", ")}.\n`;
+        if (invalidRows.length) msg += `${invalidRows.length} lignes invalides ignorées (champs manquants ou date incorrecte) : ${invalidRows.join(", ")}.\n`;
+        if (data.invalid?.length) msg += `${data.invalid.length} lignes invalides ignorées côté backend : ${data.invalid.join(", ")}.`;
+        setCsvSuccess(msg.trim());
         setCsvData(null);
       }
     } catch (e) {
