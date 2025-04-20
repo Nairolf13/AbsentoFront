@@ -28,8 +28,7 @@ export default function CreatePassword() {
     }
     setLoading(true);
     try {
-      // TODO: Appeler l'API pour définir le mot de passe avec le token
-      // await axios.post(`${API_URL}/utilisateurs/set-password`, { token, password });
+      await axios.post(`${API_URL}/password/set-password`, { token, password });
       setSuccess("Mot de passe créé avec succès ! Vous pouvez vous connecter.");
       setTimeout(() => navigate("/login"), 2000);
     } catch {
