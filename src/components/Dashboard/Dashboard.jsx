@@ -2,38 +2,108 @@ import React, { useState } from "react";
 import Calendar from "./Calendar";
 import HistoriqueAbsences from "./HistoriqueAbsences";
 import Notifications from "./Notifications";
+import EmployeeDashboardTab from "../Employee/EmployeeDashboardTab";
+import TaskList from "./TaskList";
 import { useNavigate } from "react-router-dom";
 import useAuth from "../../hooks/useAuth";
 
+// Heroicons SVG (outline)
+const icons = {
+  calendar: (
+    <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="13" rx="2" stroke="currentColor"/><path d="M16 3v4M8 3v4M3 12h18" stroke="currentColor"/></svg>
+  ),
+  history: (
+    <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9" stroke="currentColor"/><path d="M3 3v5h5" stroke="currentColor"/><path d="M12 7v5l4 2" stroke="currentColor"/></svg>
+  ),
+  notifications: (
+    <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0 1 18 14.158V11c0-3.07-1.64-5.64-5-5.958V4a1 1 0 0 0-2 0v1.042C7.64 5.36 6 7.929 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 0 1-6 0v-1m6 0H9" stroke="currentColor"/></svg>
+  ),
+  users: (
+    <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2" stroke="currentColor"/><circle cx="9" cy="7" r="4" stroke="currentColor"/><path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke="currentColor"/><path d="M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor"/></svg>
+  ),
+};
+
 export default function Dashboard() {
   const [tab, setTab] = useState("calendar");
-
-  const tabClass = (active) =>
-    `flex-1 py-3 rounded-xl font-semibold text-center transition cursor-pointer ${active ? "bg-primary text-white shadow" : "bg-accent text-secondary hover:bg-primary/10"}`;
-
   const navigate = useNavigate();
   const { user } = useAuth();
 
+  // Sidebar items
+  const sidebarItems = [
+    { key: "calendar", label: "Calendrier", icon: icons.calendar },
+    { key: "historique", label: "Historique", icon: icons.history },
+    { key: "notifications", label: "Notifications", icon: icons.notifications },
+  ];
+  if (user?.role === "ADMIN") {
+    sidebarItems.push({ key: "employes", label: "Employés", icon: icons.users });
+  }
+
   return (
-    <div className="min-h-screen bg-accent px-2 py-8 flex flex-col items-center">
-      <div className="flex w-full max-w-xl gap-2 mb-8">
-        <button onClick={() => setTab("calendar")} className={tabClass(tab === "calendar")}>Calendrier</button>
-        <button onClick={() => setTab("historique")} className={tabClass(tab === "historique")}>Historique</button>
-        <button onClick={() => setTab("notifications")} className={tabClass(tab === "notifications")}>Notifications</button>
-        {user?.role === "ADMIN" && (
+    <div className="flex h-screen bg-accent">
+      {/* Sidebar */}
+      <aside className="w-20 bg-secondary flex flex-col items-center py-6 gap-4">
+        {sidebarItems.map((item) => (
           <button
-            onClick={() => navigate("/admin/employes")}
-            className="flex-1 py-3 rounded-xl font-semibold text-center transition cursor-pointer bg-secondary text-white hover:bg-secondary/80 shadow"
+            key={item.key}
+            className={`flex flex-col items-center gap-1 text-xs font-semibold rounded-xl px-2 py-3 transition focus:outline-none ${tab === item.key ? "bg-primary text-secondary" : "text-accent hover:bg-primary/20"}`}
+            onClick={() => setTab(item.key)}
           >
-            Employés
+            <span>{item.icon}</span>
+            <span className="mt-1">{item.label}</span>
           </button>
-        )}
-      </div>
-      <div className="w-full">
-        {tab === "calendar" && <Calendar />}
-        {tab === "historique" && <HistoriqueAbsences />}
-        {tab === "notifications" && <Notifications />}
-      </div>
+        ))}
+      </aside>
+
+      {/* Main content */}
+      <main className="flex-1 flex flex-col min-w-0">
+        {/* Header */}
+        <header className="flex items-center justify-between px-10 py-6 bg-accent border-b border-secondary">
+          <div className="text-2xl font-semibold text-secondary flex items-center gap-2">
+            Bonjour
+            <span className="font-bold text-primary">
+              {user?.prenom ? `${user.prenom} ${user.nom}` : user?.nom || user?.email || "Utilisateur"}
+            </span>
+          </div>
+          <select className="bg-primary px-3 py-1 rounded-xl text-secondary">
+            <option>Mon périmètre</option>
+          </select>
+        </header>
+
+        {/* Stats cards */}
+        <div className="flex gap-6 px-10 py-6">
+          <div className="flex-1 bg-white rounded-2xl p-6 flex flex-col items-center shadow border border-primary/30">
+            <div className="text-3xl font-bold text-secondary">45</div>
+            <div className="text-secondary mt-2">Absences probables</div>
+          </div>
+          <div className="flex-1 bg-white rounded-2xl p-6 flex flex-col items-center shadow border border-primary/30">
+            <div className="text-3xl font-bold text-secondary">706</div>
+            <div className="text-secondary mt-2">Points d'attention</div>
+          </div>
+          <div className="flex-1 bg-white rounded-2xl p-6 flex flex-col items-center shadow border border-primary/30">
+            <div className="text-3xl font-bold text-secondary">0</div>
+            <div className="text-secondary mt-2">Mes tickets ouverts</div>
+          </div>
+        </div>
+
+        {/* Main grid: demandes + tâches */}
+        <div className="flex flex-1 gap-6 px-10 pb-10 min-h-0">
+          {/* Demandes à traiter (contenu central) */}
+          <section className="flex-1 bg-white rounded-2xl shadow p-6 overflow-y-auto flex flex-col min-h-0">
+            {/* Tabs content */}
+            {tab === "calendar" && <Calendar />}
+            {tab === "historique" && <HistoriqueAbsences />}
+            {tab === "notifications" && <Notifications />}
+            {tab === "employes" && <EmployeeDashboardTab />}
+          </section>
+
+          {/* Tâches à faire : affiché UNIQUEMENT sur le calendrier */}
+          {tab === "calendar" && (
+            <aside className="w-96 bg-white rounded-2xl shadow p-6 flex flex-col">
+              <TaskList />
+            </aside>
+          )}
+        </div>
+      </main>
     </div>
   );
 }

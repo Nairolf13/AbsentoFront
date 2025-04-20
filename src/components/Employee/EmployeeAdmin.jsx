@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Papa from "papaparse";
 import useAuth from "../../hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
 export default function EmployeeAdmin() {
   const { user, token } = useAuth();
@@ -30,29 +31,29 @@ export default function EmployeeAdmin() {
   const [editSuccess, setEditSuccess] = useState("");
   const [editLoading, setEditLoading] = useState(false);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoadingEmployees(true);
-      setErrorEmployees("");
-      try {
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/utilisateur/entreprise/employes`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (!res.ok) throw new Error('Erreur lors de la récupération des employés');
-        const data = await res.json();
-        setEmployees(data);
-      } catch (e) {
-        setErrorEmployees("Erreur lors de la récupération des employés.");
-      } finally {
-        setLoadingEmployees(false);
-      }
-    };
-    if (token) fetchData();
-  }, [token]);
+  const navigate = useNavigate();
 
-  if (!user || user.role !== "ADMIN") {
-    return <div className="text-center mt-16 text-red-500 font-bold">Accès réservé aux administrateurs.</div>;
-  }
+  // --- Ajout : fonction pour rafraîchir la liste des employés ---
+  const fetchEmployees = async () => {
+    setLoadingEmployees(true);
+    setErrorEmployees("");
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/utilisateur/entreprise/employes`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error('Erreur lors de la récupération des employés');
+      const data = await res.json();
+      setEmployees(data);
+    } catch (e) {
+      setErrorEmployees("Erreur lors de la récupération des employés.");
+    } finally {
+      setLoadingEmployees(false);
+    }
+  };
+
+  useEffect(() => {
+    if (token) fetchEmployees();
+  }, [token]);
 
   // CSV Upload Handler
   const handleCsvDrop = (e) => {
@@ -146,10 +147,24 @@ export default function EmployeeAdmin() {
     setSingleError(""); setSingleSuccess("");
     setSingleLoading(true);
     try {
-      // TODO: Envoyer singleForm au backend pour création d'un employé
-      // Le backend doit : créer l'utilisateur SANS mot de passe et envoyer un mail d'invitation
-      setSingleSuccess("Employé ajouté et mail d'invitation envoyé (simulation)");
-      setSingleForm({ nom: "", prenom: "", email: "", telephone: "", dateNaissance: "", adresse: "", poste: "", role: "EMPLOYE" });
+      // Appel réel au backend pour créer l'employé
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/password/invite`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify([singleForm])
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setSingleError(data.message || "Erreur lors de l'ajout");
+      } else {
+        setSingleSuccess("Employé ajouté et mail d'invitation envoyé");
+        setSingleForm({ nom: "", prenom: "", email: "", telephone: "", dateNaissance: "", adresse: "", poste: "", role: "EMPLOYE" });
+        setShowAddForm(false); // Ferme le formulaire
+        await fetchEmployees(); // Rafraîchit la liste automatiquement
+      }
     } catch {
       setSingleError("Erreur lors de l'ajout");
     } finally {
@@ -187,6 +202,20 @@ export default function EmployeeAdmin() {
     return new Set(employees.map(e => e.email.toLowerCase()));
   };
 
+  // --- Tri alphabétique ---
+  const sortedEmployees = [...employees].sort((a, b) => {
+    const nomA = (a.nom || '').toLowerCase();
+    const nomB = (b.nom || '').toLowerCase();
+    if (nomA < nomB) return -1;
+    if (nomA > nomB) return 1;
+    // Si même nom, trie par prénom
+    const prenomA = (a.prenom || '').toLowerCase();
+    const prenomB = (b.prenom || '').toLowerCase();
+    if (prenomA < prenomB) return -1;
+    if (prenomA > prenomB) return 1;
+    return 0;
+  });
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-accent py-12">
       <div className="w-full  mx-auto relative">
@@ -206,7 +235,7 @@ export default function EmployeeAdmin() {
             <div>Chargement…</div>
           ) : errorEmployees ? (
             <div className="text-red-500 text-center">{errorEmployees}</div>
-          ) : employees.length === 0 ? (
+          ) : sortedEmployees.length === 0 ? (
             <div>Il n'y a pas d'employés à afficher.</div>
           ) : (
             <table className="w-full bg-white border border-gray-200 rounded-xl text-sm">
@@ -225,7 +254,7 @@ export default function EmployeeAdmin() {
                 </tr>
               </thead>
               <tbody>
-                {employees.map(emp => (
+                {sortedEmployees.map(emp => (
                   <tr key={emp.id} className="text-center">
                     <td className="py-2 px-3 border-b whitespace-nowrap">{emp.nom}</td>
                     <td className="py-2 px-3 border-b whitespace-nowrap">{emp.prenom}</td>
