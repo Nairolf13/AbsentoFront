@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { getMyAbsences, validateAbsence, refuseAbsence } from "../../api/absento";
+import { getMyAbsences, getAllAbsences, validateAbsence, refuseAbsence } from "../../api/absento";
+import { fetchEmployees } from "../../api/employees";
+import { proposerRemplacant } from "../../api/remplacement";
 import useAuth from "../../hooks/useAuth";
 
 const statusColors = {
@@ -22,15 +24,20 @@ export default function HistoriqueAbsences() {
   const [selectedAbsence, setSelectedAbsence] = useState(null);
   const [remplacantId, setRemplacantId] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
+  const [employees, setEmployees] = useState([]);
 
   useEffect(() => {
     if (!token) return;
     setLoading(true);
-    getMyAbsences(token)
+    const privilegedRoles = ["ADMIN", "RH", "MANAGER"];
+    const fetchAbsences = privilegedRoles.includes(user?.role)
+      ? getAllAbsences
+      : getMyAbsences;
+    fetchAbsences(token)
       .then(setAbsences)
       .catch(setError)
       .finally(() => setLoading(false));
-  }, [token]);
+  }, [token, user]);
 
   const handleValidate = async (id) => {
     try {
@@ -41,19 +48,30 @@ export default function HistoriqueAbsences() {
     }
   };
 
-  const handleOpenModifier = (absence) => {
+  const handleOpenModifier = async (absence) => {
     setSelectedAbsence(absence);
     setRemplacantId("");
+    // Charge la liste des employés à l'ouverture de la modal
+    try {
+      const emps = await fetchEmployees(token);
+      setEmployees(emps);
+    } catch (e) {
+      setEmployees([]);
+    }
   };
 
   const handleChangeRemplacant = async () => {
     if (!remplacantId) return;
     setActionLoading(true);
     try {
-      // TODO: appeler l'API pour modifier le remplaçant
-      // await updateRemplacant(selectedAbsence.id, remplacantId, token);
-      // Simule la mise à jour côté front :
-      setAbsences(absences => absences.map(a => a.id === selectedAbsence.id ? { ...a, remplacementStatus: "En cours" } : a));
+      // Appel API pour modifier le remplaçant
+      const updated = await proposerRemplacant(selectedAbsence.id, remplacantId, token);
+      // Met à jour l'affichage localement
+      setAbsences(absences => absences.map(a =>
+        a.id === selectedAbsence.id
+          ? { ...a, remplacement: { ...a.remplacement, remplacant: employees.find(e => e.id === Number(remplacantId)) } }
+          : a
+      ));
       setSelectedAbsence(null);
     } finally {
       setActionLoading(false);
@@ -80,8 +98,9 @@ export default function HistoriqueAbsences() {
                   <th className="py-2 px-3">Type</th>
                   <th className="py-2 px-3">Motif</th>
                   <th className="py-2 px-3">Statut</th>
-                  <th className="py-2 px-3">Remplacement</th>
-                  {user?.role === "ADMIN" && <th className="py-2 px-3">Actions</th>}
+                  {/* <th className="py-2 px-3">Statut Remplacement</th> */}
+                  <th className="py-2 px-3">Remplaçant</th>
+                  {(user?.role === "ADMIN" || user?.role === "RH" || user?.role === "MANAGER") && <th className="py-2 px-3">Actions</th>}
                 </tr>
               </thead>
               <tbody>
@@ -95,17 +114,16 @@ export default function HistoriqueAbsences() {
                     <td className="py-2 px-3 whitespace-nowrap">
                       <span className={`px-2 py-1 rounded-xl text-xs font-semibold ${statusColors[a.status] || "bg-gray-200 text-gray-700"}`}>{a.status}</span>
                     </td>
+                    {/* <td className="py-2 px-3 whitespace-nowrap">
+                      <span className={`px-2 py-1 rounded-xl text-xs font-semibold ${remplacementStatusColors[a.remplacement?.status] || "bg-gray-200 text-gray-700"}`}>{a.remplacement?.status || "Aucun"}</span>
+                    </td> */}
                     <td className="py-2 px-3 whitespace-nowrap">
-                      <span className={`px-2 py-1 rounded-xl text-xs font-semibold ${remplacementStatusColors[a.remplacementStatus] || "bg-gray-200 text-gray-700"}`}>{a.remplacementStatus || "Aucun"}</span>
+                      {a.remplacement?.remplacant ? `${a.remplacement.remplacant.prenom} ${a.remplacement.remplacant.nom}` : "-"}
                     </td>
-                    {user?.role === "ADMIN" && (
+                    {(user?.role === "ADMIN" || user?.role === "RH" || user?.role === "MANAGER") && (
                       <td className="py-2 px-3 whitespace-nowrap">
-                        {a.status === "En attente" && (
-                          <>
-                            <button className="bg-primary text-white rounded-xl px-3 py-1 text-xs font-bold hover:bg-primary/80 transition" onClick={() => handleValidate(a.id)}>Valider</button>
-                            <button className="bg-blue-500 text-white rounded-xl px-3 py-1 text-xs font-bold hover:bg-blue-500/80 transition ml-2" onClick={() => handleOpenModifier(a)}>Modifier remplaçant</button>
-                          </>
-                        )}
+                        <button className="bg-primary text-white rounded-xl px-3 py-1 text-xs font-bold hover:bg-primary/80 transition" onClick={() => handleValidate(a.id)}>Valider</button>
+                        <button className="bg-blue-500 text-white rounded-xl px-3 py-1 text-xs font-bold hover:bg-blue-500/80 transition ml-2" onClick={() => handleOpenModifier(a)}>Modifier remplaçant</button>
                       </td>
                     )}
                   </tr>
@@ -114,11 +132,20 @@ export default function HistoriqueAbsences() {
             </table>
           )}
           {selectedAbsence && (
-            <div className="mt-6 w-full max-w-lg mx-auto">
-              <h3 className="text-lg font-bold mb-2">Modifier le remplaçant pour l'absence du {new Date(selectedAbsence.startDate).toLocaleDateString()}</h3>
-              <input type="text" placeholder="ID du remplaçant" value={remplacantId} onChange={e => setRemplacantId(e.target.value)} className="py-2 px-3 border border-gray-300 rounded-lg w-full" />
-              <button className="bg-primary text-white rounded-xl px-3 py-1 text-xs font-bold hover:bg-primary/80 transition mt-2" onClick={handleChangeRemplacant} disabled={actionLoading || !remplacantId}>Valider le changement</button>
-              <button className="bg-gray-200 text-gray-700 rounded-xl px-3 py-1 text-xs font-bold hover:bg-gray-200/80 transition mt-2 ml-2" onClick={() => setSelectedAbsence(null)}>Annuler</button>
+            <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex items-center justify-center">
+              <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-lg mx-auto relative">
+                <button className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-xl" onClick={() => setSelectedAbsence(null)}>&times;</button>
+                <h3 className="text-lg font-bold mb-2">Modifier le remplaçant pour l'absence du {new Date(selectedAbsence.startDate).toLocaleDateString()}</h3>
+                <select value={remplacantId} onChange={e => setRemplacantId(e.target.value)} className="py-2 px-3 border border-gray-300 rounded-lg w-full mb-4">
+                  <option value="">Sélectionner un remplaçant</option>
+                  {/* Filtre avec le poste du remplaçé selon le schéma Prisma */}
+                  {employees.filter(emp => emp.poste === (selectedAbsence.remplacement?.remplace?.poste || selectedAbsence.employee?.poste || selectedAbsence.poste)).map(emp => (
+                    <option key={emp.id} value={emp.id}>{emp.prenom} {emp.nom}</option>
+                  ))}
+                </select>
+                <button className="bg-primary text-white rounded-xl px-3 py-1 text-xs font-bold hover:bg-primary/80 transition mt-2" onClick={handleChangeRemplacant} disabled={actionLoading || !remplacantId}>Valider le changement</button>
+                <button className="bg-gray-200 text-gray-700 rounded-xl px-3 py-1 text-xs font-bold hover:bg-gray-200/80 transition mt-2 ml-2" onClick={() => setSelectedAbsence(null)}>Annuler</button>
+              </div>
             </div>
           )}
         </div>

@@ -11,6 +11,7 @@ import HomePage from "./pages/HomePage";
 import CreatePassword from "./pages/CreatePassword";
 import useAuth from "./hooks/useAuth";
 import EmployeeAdmin from "./components/Employee/EmployeeAdmin";
+import RemplacementAdmin from "./pages/RemplacementAdmin";
 
 function AppContent() {
   const { pathname } = useLocation();
@@ -23,8 +24,9 @@ function AppContent() {
       <Routes>
         <Route path="/login" element={<LoginForm />} />
         <Route path="/register" element={<RegisterForm />} />
+        <Route path="/remplacement-suggest" element={<PrivateRoute><RemplacementSuggestPage /></PrivateRoute>} />
+        <Route path="/remplacement-admin" element={<PrivateRoute><RemplacementAdmin /></PrivateRoute>} />
         <Route path="/absence/request" element={<PrivateRoute><RequestAbsenceForm /></PrivateRoute>} />
-        <Route path="/absence/suggest" element={<PrivateRoute><RemplacementSuggestPage /></PrivateRoute>} />
         <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
         <Route path="/admin/employes" element={<PrivateRoute><EmployeeAdmin /></PrivateRoute>} />
         <Route path="/creer-mot-de-passe" element={<CreatePassword />} />

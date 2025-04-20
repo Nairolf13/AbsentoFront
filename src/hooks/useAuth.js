@@ -23,13 +23,16 @@ export default function useAuth() {
   useEffect(() => {
     if (!token) {
       setUser(null);
+      console.log('[DEBUG] Pas de token, user déconnecté');
       return;
     }
     const decoded = decodeJWT(token);
+    console.log('[DEBUG] Token détecté dans useAuth:', token, decoded);
     if (decoded && decoded.id) {
       fetchUserInfo(decoded.id, token);
     } else {
       setUser(null);
+      console.log('[DEBUG] Token non décodable, user déconnecté');
     }
   }, [token]);
 

@@ -17,7 +17,7 @@ export default function Header() {
       <nav className="flex gap-4">
         <Link to="/dashboard" className="text-secondary hover:text-primary transition font-semibold">Dashboard</Link>
         <Link to="/absence/request" className="text-secondary hover:text-primary transition font-semibold">Absence</Link>
-        <Link to="/absence/suggest" className="text-secondary hover:text-primary transition font-semibold">Remplacement</Link>
+        <Link to="/remplacement-admin" className="text-secondary hover:text-primary transition font-semibold">Remplacement</Link>
         <span className="text-secondary hover:text-primary transition font-semibold cursor-pointer" onClick={handleLogout}>Déconnexion</span>
       </nav>
     </header>

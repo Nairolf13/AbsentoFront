@@ -4,6 +4,10 @@ import useAuth from "../../hooks/useAuth";
 
 export default function PrivateRoute({ children }) {
   const { token } = useAuth();
-  if (!token) return <Navigate to="/login" replace />;
+  if (!token) {
+    // LOG: Trace chaque redirection automatique vers /login
+    console.warn('[PrivateRoute] Redirection vers /login car token absent ou null');
+    return <Navigate to="/login" replace />;
+  }
   return children;
 }

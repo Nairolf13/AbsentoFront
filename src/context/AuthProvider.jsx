@@ -15,6 +15,9 @@ export function AuthProvider({ children }) {
 
   // Synchronise token/user avec localStorage à chaque changement
   useEffect(() => {
+    // LOG: Affiche la valeur du token à chaque changement
+    console.log('[AuthProvider] Token (localStorage):', localStorage.getItem('token'));
+    console.log('[AuthProvider] Token (state):', token);
     if (token) {
       localStorage.setItem("token", token);
       const decoded = decodeJWT(token);

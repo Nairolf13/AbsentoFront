@@ -80,6 +80,20 @@ export const refuseAbsence = async (absenceId, token) => {
   return data;
 };
 
+export const getAbsencesSansRemplacant = async (token) => {
+  const { data } = await axios.get(`${API_URL}/absences/sans-remplacant`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return data;
+};
+
+export const getAllAbsences = async (token) => {
+  const { data } = await axios.get(`${API_URL}/absences/toutes`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return data;
+};
+
 // export const getEmployesEntreprise = async (token) => {
 //   const { data } = await axios.get(`${API_URL}/admin/employes`, {
 //     headers: { Authorization: `Bearer ${token}` },

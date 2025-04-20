@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import useAuth from "../../hooks/useAuth";
+import ConfirmModal from "../ui/ConfirmModal";
+import "../ui/animations.css";
 
 export default function TaskList() {
   const { user, token } = useAuth();
@@ -9,6 +11,7 @@ export default function TaskList() {
   const [newTask, setNewTask] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [editValue, setEditValue] = useState("");
+  const [modalDelete, setModalDelete] = useState({ open: false, task: null });
 
   // Fetch tasks on mount
   useEffect(() => {
@@ -47,14 +50,16 @@ export default function TaskList() {
     }
   };
 
-  // Delete a task
-  const handleDelete = async (id) => {
-    if (!window.confirm("Supprimer cette tâche ?")) return;
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/tasks/${id}`, {
+  // Suppression tâche avec confirmation
+  const handleDelete = (task) => setModalDelete({ open: true, task });
+  const confirmDelete = async () => {
+    if (!modalDelete.task) return;
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/tasks/${modalDelete.task.id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (res.ok) setTasks((ts) => ts.filter((t) => t.id !== id));
+    if (res.ok) setTasks((ts) => ts.filter((t) => t.id !== modalDelete.task.id));
+    setModalDelete({ open: false, task: null });
   };
 
   // Edit a task
@@ -149,7 +154,7 @@ export default function TaskList() {
                   <button
                     type="button"
                     className="ml-2 text-xs text-red-500 opacity-0 group-hover:opacity-100"
-                    onClick={() => handleDelete(task.id)}
+                    onClick={() => handleDelete(task)}
                   >
                     Supprimer
                   </button>
@@ -159,6 +164,16 @@ export default function TaskList() {
           ))}
         </ul>
       )}
+      {/* Modal de confirmation suppression tâche */}
+      <ConfirmModal
+        open={modalDelete.open}
+        title="Supprimer la tâche ?"
+        message={`Voulez-vous vraiment supprimer la tâche « ${modalDelete.task ? modalDelete.task.title : ''} » ? Cette action est irréversible.`}
+        onConfirm={confirmDelete}
+        onCancel={() => setModalDelete({ open: false, task: null })}
+        confirmText="Supprimer"
+        cancelText="Annuler"
+      />
     </div>
   );
 }

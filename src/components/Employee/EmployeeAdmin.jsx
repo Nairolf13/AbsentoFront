@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import Papa from "papaparse";
 import useAuth from "../../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
+import ConfirmModal from "../ui/ConfirmModal";
+import "../ui/animations.css";
 
 export default function EmployeeAdmin() {
   const { user, token } = useAuth();
@@ -30,6 +32,7 @@ export default function EmployeeAdmin() {
   const [editError, setEditError] = useState("");
   const [editSuccess, setEditSuccess] = useState("");
   const [editLoading, setEditLoading] = useState(false);
+  const [modalDelete, setModalDelete] = useState({ open: false, emp: null });
 
   const navigate = useNavigate();
 
@@ -178,23 +181,21 @@ export default function EmployeeAdmin() {
     setEditSuccess("");
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Confirmer la suppression de cet employé ?")) return;
-    setEditLoading(true);
-    setEditError("");
-    console.log("[SUPPR] id envoyé:", parseInt(id));
+  const handleDelete = (emp) => setModalDelete({ open: true, emp });
+  const confirmDelete = async () => {
+    if (!modalDelete.emp) return;
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/utilisateur/${parseInt(id)}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/utilisateur/${modalDelete.emp.id}`, {
         method: "DELETE",
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) throw new Error("Erreur lors de la suppression");
-      setEmployees(employees.filter(e => e.id !== id));
-      setEditSuccess("Employé supprimé");
-    } catch {
-      setEditError("Erreur lors de la suppression");
+      if (res.ok) {
+        setEmployees((emps) => emps.filter((e) => e.id !== modalDelete.emp.id));
+      }
+    } catch (e) {
+      alert("Erreur lors de la suppression");
     } finally {
-      setEditLoading(false);
+      setModalDelete({ open: false, emp: null });
     }
   };
 
@@ -268,7 +269,7 @@ export default function EmployeeAdmin() {
                     <td className="py-2 px-3 border-b">
                       <div className="flex flex-row justify-center gap-2">
                         <button className="bg-yellow-400 hover:bg-yellow-500 text-white font-bold px-3 py-1 rounded" onClick={() => handleEdit(emp)}>Modifier</button>
-                        <button className="bg-red-500 hover:bg-red-600 text-white font-bold px-3 py-1 rounded" onClick={() => handleDelete(emp.id)}>Supprimer</button>
+                        <button className="bg-red-500 hover:bg-red-600 text-white font-bold px-3 py-1 rounded" onClick={() => handleDelete(emp)}>Supprimer</button>
                       </div>
                     </td>
                   </tr>
@@ -456,6 +457,16 @@ export default function EmployeeAdmin() {
             </div>
           </div>
         )}
+        {/* Modal de confirmation suppression employé */}
+        <ConfirmModal
+          open={modalDelete.open}
+          title="Supprimer l'employé ?"
+          message={`Voulez-vous vraiment supprimer ${modalDelete.emp ? modalDelete.emp.nom + ' ' + modalDelete.emp.prenom : ''} ? Cette action est irréversible.`}
+          onConfirm={confirmDelete}
+          onCancel={() => setModalDelete({ open: false, emp: null })}
+          confirmText="Supprimer"
+          cancelText="Annuler"
+        />
       </div>
     </div>
   );

@@ -2,7 +2,7 @@ import axios from 'axios';
 import { API_URL } from './config';
 
 export async function getRemplacantsPossibles(poste, absentId, token) {
-  const res = await axios.get(`${API_URL}/remplacement/candidats`, {
+  const res = await axios.get(`${API_URL}/remplacements/candidats`, {
     params: { poste, absentId },
     headers: { Authorization: `Bearer ${token}` }
   });
@@ -10,7 +10,7 @@ export async function getRemplacantsPossibles(poste, absentId, token) {
 }
 
 export async function proposerRemplacant(absenceId, remplaçantId, token) {
-  const res = await axios.post(`${API_URL}/remplacement/valider`, {
+  const res = await axios.post(`${API_URL}/remplacements/valider`, {
     absenceId, remplaçantId
   }, {
     headers: { Authorization: `Bearer ${token}` }

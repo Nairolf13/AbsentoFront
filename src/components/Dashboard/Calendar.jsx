@@ -5,6 +5,7 @@ import { addDays, startOfWeek, format, isSameDay } from 'date-fns';
 import { fetchEmployees } from '../../api/employees';
 import { fetchEmployeePlanning, setEmployeePlanning, deleteEmployeePlanning } from '../../api/planning';
 import useAuth from '../../hooks/useAuth';
+import ConfirmModal from '../ui/ConfirmModal'; // Importez votre composant ConfirmModal
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const DAYS = ["Lun.", "Mar.", "Mer.", "Jeu.", "Ven.", "Sam.", "Dim."];
@@ -145,7 +146,13 @@ export default function AbsenceCalendar() {
   };
 
   // --- Supprimer une tâche sur un créneau ou une plage ---
+  const [modalDeleteOpen, setModalDeleteOpen] = useState(false);
+
   const handleDeleteTask = async () => {
+    setModalDeleteOpen(true); // Ouvre la modal de confirmation
+  };
+
+  const confirmDeleteTask = async () => {
     if (modalSlot) {
       let dates = [];
       if (modalSlot.start !== undefined && modalSlot.end !== undefined) {
@@ -163,6 +170,7 @@ export default function AbsenceCalendar() {
       }
       await deleteEmployeePlanning(selectedEmployeeId, dates, token);
       setModalOpen(false);
+      setModalDeleteOpen(false);
       const from = format(weekStart, 'yyyy-MM-dd');
       const to = format(addDays(weekStart, 6), 'yyyy-MM-dd');
       const planning = await fetchEmployeePlanning(selectedEmployeeId, from, to, token);
@@ -178,6 +186,8 @@ export default function AbsenceCalendar() {
       }));
     }
   };
+
+  const cancelDeleteTask = () => setModalDeleteOpen(false);
 
   // Ajout pour sélection de plage horaire
   const [selecting, setSelecting] = useState(false);
@@ -349,6 +359,16 @@ export default function AbsenceCalendar() {
             </div>
           </div>
         )}
+        {/* Modal de confirmation suppression */}
+        <ConfirmModal
+          open={modalDeleteOpen}
+          title="Supprimer la tâche ?"
+          message="Cette action est irréversible. Voulez-vous vraiment supprimer cette tâche du planning ?"
+          onConfirm={confirmDeleteTask}
+          onCancel={cancelDeleteTask}
+          confirmText="Supprimer"
+          cancelText="Annuler"
+        />
       </main>
     </div>
   );
