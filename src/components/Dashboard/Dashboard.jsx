@@ -44,7 +44,6 @@ export default function Dashboard() {
       <aside className="w-20 bg-secondary flex flex-col items-center py-6 gap-4">
         {sidebarItems.map((item) => (
           <button
-            key={item.key}
             className={`flex flex-col items-center gap-1 text-xs font-semibold rounded-xl px-2 py-3 transition focus:outline-none ${tab === item.key ? "bg-primary text-secondary" : "text-accent hover:bg-primary/20"}`}
             onClick={() => setTab(item.key)}
           >
