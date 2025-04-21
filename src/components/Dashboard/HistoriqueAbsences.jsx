@@ -85,7 +85,7 @@ export default function HistoriqueAbsences() {
     <div className="min-h-screen flex flex-col items-center justify-center bg-accent py-12">
       <div className="w-full max-w-[1600px] mx-auto flex justify-center">
         <div className="bg-white rounded-2xl shadow-lg px-10 py-10 w-full max-w-[1500px] flex flex-col items-center">
-          <h2 className="text-2xl font-bold mb-6 text-primary text-center">Historique de mes absences</h2>
+          <h2 className="text-2xl font-bold mb-6 text-primary text-center">Historique des absences</h2>
           {absences.length === 0 ? (
             <div className="text-secondary text-center">Aucune absence soumise.</div>
           ) : (

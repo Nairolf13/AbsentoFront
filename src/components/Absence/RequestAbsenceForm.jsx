@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import useAuth from "../../hooks/useAuth";
 import { requestAbsence } from "../../api/absento";
+import { useNavigate } from "react-router-dom";
 
 export default function RequestAbsenceForm() {
   const [dateDebut, setDateDebut] = useState("");
@@ -13,6 +14,7 @@ export default function RequestAbsenceForm() {
   const [error, setError] = useState("");
   const [justificatif, setJustificatif] = useState(null);
   const { token } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,6 +22,9 @@ export default function RequestAbsenceForm() {
     try {
       await requestAbsence({ dateDebut, heureDebut, dateFin, heureFin, type, motif, justificatif }, token);
       setSuccess("Demande d'absence envoyée !");
+      setTimeout(() => {
+        navigate("/dashboard", { replace: true, state: { openTab: "calendar", showAbsenceNotif: true } });
+      }, 800);
     } catch (err) {
       if (err.response && err.response.data && err.response.data.message) {
         setError(err.response.data.message);

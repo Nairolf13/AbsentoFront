@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Calendar from "./Calendar";
 import HistoriqueAbsences from "./HistoriqueAbsences";
 import RequestAbsenceForm from "../Absence/RequestAbsenceForm";
 import RemplacementSuggestPage from "../../pages/RemplacementSuggest";
 import EmployeeDashboardTab from "../Employee/EmployeeDashboardTab";
 import TaskList from "./TaskList";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import useAuth from "../../hooks/useAuth";
 
 // Heroicons SVG (outline)
@@ -28,9 +28,40 @@ const icons = {
 };
 
 export default function Dashboard() {
-  const [tab, setTab] = useState("calendar");
+  const location = useLocation();
+  const [tab, setTab] = useState(() => location.state?.openTab || "calendar");
   const navigate = useNavigate();
   const { user } = useAuth();
+
+  // Si location.state?.openTab change, on force l'onglet
+  useEffect(() => {
+    if (location.state?.openTab && tab !== location.state.openTab) {
+      setTab(location.state.openTab);
+      // On nettoie l'état pour éviter de re-switcher si on navigue à nouveau
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state, tab, navigate, location.pathname]);
+
+  // Affiche une notification spéciale après déclaration d'absence ET demande au header de rafraîchir
+  useEffect(() => {
+    if (location.state?.showAbsenceNotif && tab === "calendar") {
+      window.dispatchEvent(new CustomEvent("absenceDeclared"));
+      // Rafraîchir la pastille notifications après 5s et 10s (pour être sûr que le backend a traité)
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent("refreshNotifications"));
+      }, 5000);
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent("refreshNotifications"));
+      }, 10000);
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state, tab, navigate, location.pathname, location.key]);
+
+  // Demande au Header de rafraîchir les notifications à chaque clic sur la sidebar
+  const handleSidebarClick = (key) => {
+    setTab(key);
+    window.dispatchEvent(new CustomEvent("refreshNotifications"));
+  };
 
   // Sidebar items (Absence et Remplacement ajoutés, Notifications retiré)
   const sidebarItems = [
@@ -51,7 +82,7 @@ export default function Dashboard() {
           <button
             key={item.key}
             className={`flex flex-col items-center gap-1 text-xs font-semibold rounded-xl px-2 py-3 transition focus:outline-none ${tab === item.key ? "bg-primary text-secondary" : "text-accent hover:bg-primary/20"}`}
-            onClick={() => setTab(item.key)}
+            onClick={() => handleSidebarClick(item.key)}
           >
             <span>{item.icon}</span>
             <span className="mt-1">{item.label}</span>

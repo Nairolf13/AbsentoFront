@@ -12,6 +12,7 @@ import CreatePassword from "./pages/CreatePassword";
 import useAuth from "./hooks/useAuth";
 import EmployeeAdmin from "./components/Employee/EmployeeAdmin";
 import RemplacementAdmin from "./pages/RemplacementAdmin";
+import Profile from "./components/Profile/Profile";
 
 function AppContent() {
   const { pathname } = useLocation();
@@ -30,6 +31,7 @@ function AppContent() {
         <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
         <Route path="/admin/employes" element={<PrivateRoute><EmployeeAdmin /></PrivateRoute>} />
         <Route path="/creer-mot-de-passe" element={<CreatePassword />} />
+        <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
         <Route path="/" element={<HomePage />} />
         <Route path="*" element={<Navigate to="/login" />} />
       </Routes>

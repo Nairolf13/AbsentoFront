@@ -3,12 +3,15 @@ import { Link, useNavigate } from "react-router-dom";
 import { getUserNotifications } from "../../api/notifications";
 import useAuth from "../../hooks/useAuth";
 import Notifications from "../Dashboard/Notifications";
+import Profile from "../Profile/Profile";
 
 export default function Header() {
   const navigate = useNavigate();
   const { logout, user, token } = useAuth();
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifCount, setNotifCount] = useState(0);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [showAbsenceToast, setShowAbsenceToast] = useState(false);
 
   // Charger le nombre de notifications non lues au montage
   useEffect(() => {
@@ -28,6 +31,57 @@ export default function Header() {
     return () => window.removeEventListener("notifCount", handleNotifCount);
   }, []);
 
+  useEffect(() => {
+    const handler = () => {
+      setShowAbsenceToast(true);
+      // Recharge les notifications immédiatement
+      if (user && token) {
+        getUserNotifications(user.id, token).then(data => {
+          const unread = data.filter(n => !n.lu).length;
+          setNotifCount(unread);
+        });
+        // Re-fetch après 1 seconde
+        setTimeout(() => {
+          getUserNotifications(user.id, token).then(data => {
+            const unread = data.filter(n => !n.lu).length;
+            setNotifCount(unread);
+          });
+        }, 1000);
+        // Re-fetch après 5 secondes
+        setTimeout(() => {
+          getUserNotifications(user.id, token).then(data => {
+            const unread = data.filter(n => !n.lu).length;
+            setNotifCount(unread);
+          });
+        }, 5000);
+        // Re-fetch après 10 secondes
+        setTimeout(() => {
+          getUserNotifications(user.id, token).then(data => {
+            const unread = data.filter(n => !n.lu).length;
+            setNotifCount(unread);
+          });
+        }, 10000);
+      }
+      setTimeout(() => setShowAbsenceToast(false), 3500);
+    };
+    window.addEventListener("absenceDeclared", handler);
+    return () => window.removeEventListener("absenceDeclared", handler);
+  }, [user, token]);
+
+  // Rafraîchit les notifications à chaque event refreshNotifications
+  useEffect(() => {
+    const refresh = () => {
+      if (user && token) {
+        getUserNotifications(user.id, token).then(data => {
+          const unread = data.filter(n => !n.lu).length;
+          setNotifCount(unread);
+        });
+      }
+    };
+    window.addEventListener("refreshNotifications", refresh);
+    return () => window.removeEventListener("refreshNotifications", refresh);
+  }, [user, token]);
+
   const handleLogout = () => {
     logout();
     navigate("/");
@@ -37,6 +91,11 @@ export default function Header() {
     <header className="bg-white shadow flex items-center justify-between px-6 py-4 rounded-b-2xl mb-8 relative">
       <Link to="/" className="text-xl font-bold text-primary">Absento</Link>
       <nav className="flex gap-4 items-center">
+        <Link to="#" onClick={e => { e.preventDefault(); setProfileOpen(true); }} className="flex items-center px-1 py-1 rounded hover:bg-gray-100 transition">
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-7 h-7 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5.121 17.804A13.937 13.937 0 0112 15c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </Link>
         <button onClick={() => setNotifOpen(v => !v)} className="relative focus:outline-none">
           <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
@@ -49,10 +108,29 @@ export default function Header() {
         </button>
         <span className="text-secondary hover:text-primary transition font-semibold cursor-pointer" onClick={handleLogout}>Déconnexion</span>
       </nav>
+      {/* Toast notification absence envoyée */}
+      {showAbsenceToast && (
+        <div className="fixed top-6 right-6 z-50 bg-green-600 text-white px-6 py-3 rounded-xl shadow-lg animate-fade-in">
+          <span>Votre absence a bien été déclarée !</span>
+        </div>
+      )}
       {/* Panneau notifications */}
       {notifOpen && (
         <div className="absolute right-0 top-full mt-2 z-50">
           <Notifications onCountChange={setNotifCount} />
+        </div>
+      )}
+      {/* Fenêtre modale profil */}
+      {profileOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+          <div className="relative bg-white rounded-xl shadow-xl p-6 max-w-lg w-full mx-2 animate-fade-in">
+            <button onClick={() => setProfileOpen(false)} className="absolute top-2 right-2 p-1 rounded hover:bg-gray-200 transition" aria-label="Fermer">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <Profile />
+          </div>
         </div>
       )}
     </header>
