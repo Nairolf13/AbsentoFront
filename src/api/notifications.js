@@ -14,3 +14,9 @@ export async function deleteNotification(id, token) {
     headers: { Authorization: `Bearer ${token}` }
   });
 }
+
+export async function markNotificationAsRead(id, token) {
+  await axios.patch(`${API_URL}/admin/notifications/${id}/read`, {}, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+}

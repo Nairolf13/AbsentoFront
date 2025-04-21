@@ -18,8 +18,20 @@ export const registerEntreprise = async (entreprise) => {
 };
 
 export const requestAbsence = async (absence, token) => {
-  const { data } = await axios.post(`${API_URL}/absences/declarer`, absence, {
-    headers: { Authorization: `Bearer ${token}` },
+  const formData = new FormData();
+  formData.append('dateDebut', absence.dateDebut);
+  formData.append('dateFin', absence.dateFin);
+  formData.append('type', absence.type);
+  if (absence.motif) formData.append('motif', absence.motif);
+  if (absence.justificatif) formData.append('justificatif', absence.justificatif);
+  // Harmonisation : toujours envoyer heureDebut et heureFin même si vides
+  formData.append('heureDebut', absence.heureDebut || "");
+  formData.append('heureFin', absence.heureFin || "");
+  const { data } = await axios.post(`${API_URL}/absences/declarer`, formData, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'multipart/form-data',
+    },
   });
   return data;
 };

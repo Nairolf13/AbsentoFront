@@ -100,6 +100,7 @@ export default function HistoriqueAbsences() {
                   <th className="py-2 px-3">Statut</th>
                   {/* <th className="py-2 px-3">Statut Remplacement</th> */}
                   <th className="py-2 px-3">Remplaçant</th>
+                  <th className="py-2 px-3">Justificatif</th>
                   {(user?.role === "ADMIN" || user?.role === "RH" || user?.role === "MANAGER") && <th className="py-2 px-3">Actions</th>}
                 </tr>
               </thead>
@@ -119,6 +120,13 @@ export default function HistoriqueAbsences() {
                     </td> */}
                     <td className="py-2 px-3 whitespace-nowrap">
                       {a.remplacement?.remplacant ? `${a.remplacement.remplacant.prenom} ${a.remplacement.remplacant.nom}` : "-"}
+                    </td>
+                    <td className="py-2 px-3 whitespace-nowrap">
+                      {a.justificatifUrl ? (
+                        <a href={a.justificatifUrl} target="_blank" rel="noopener noreferrer" className="text-primary underline font-semibold">Voir</a>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
                     </td>
                     {(user?.role === "ADMIN" || user?.role === "RH" || user?.role === "MANAGER") && (
                       <td className="py-2 px-3 whitespace-nowrap">
