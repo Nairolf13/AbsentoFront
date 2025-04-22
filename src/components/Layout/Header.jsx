@@ -137,7 +137,16 @@ export default function Header() {
             </span>
           )}
         </button>
-        <span className="text-secondary hover:text-primary transition font-semibold cursor-pointer" onClick={handleLogout}>Déconnexion</span>
+        <button
+          onClick={handleLogout}
+          title="Déconnexion"
+          className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-red-50 transition text-secondary hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-200"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H7a2 2 0 01-2-2V7a2 2 0 012-2h4a2 2 0 012 2v1" />
+          </svg>
+          <span className="hidden sm:inline font-semibold">Déconnexion</span>
+        </button>
       </nav>
       {/* Toast notification absence envoyée */}
       {showAbsenceToast && (
