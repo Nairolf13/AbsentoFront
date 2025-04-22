@@ -220,28 +220,41 @@ export default function AbsenceCalendar() {
     startY: 0,
   });
 
-  // Correction : sélection fluide multi-heures sur mobile dès le touchstart
+  // Gestion appui long pour sélection mobile, compatible multi-heures
+  const longPressTimeout = React.useRef(null);
+  const longPressTriggered = React.useRef(false);
+
   const handleTouchStart = (dayIdx, hour) => (e) => {
     if (e.touches.length > 1) return;
-    const touch = e.touches[0];
-    document.body.style.overflow = 'hidden'; // Désactive le scroll pendant la sélection
-    touchState.current = {
-      selecting: true,
-      start: { dayIdx, hour },
-      end: { dayIdx, hour },
-      dayIdx,
-      startX: touch.clientX,
-      startY: touch.clientY,
-    };
-    setSelecting(true);
-    setRangeStart({ dayIdx, hour });
-    setRangeEnd({ dayIdx, hour });
+    longPressTriggered.current = false;
+    longPressTimeout.current = setTimeout(() => {
+      longPressTriggered.current = true;
+      const touch = e.touches[0];
+      document.body.style.overflow = 'hidden';
+      touchState.current = {
+        selecting: true,
+        start: { dayIdx, hour },
+        end: { dayIdx, hour },
+        dayIdx,
+        startX: touch.clientX,
+        startY: touch.clientY,
+      };
+      setSelecting(true);
+      setRangeStart({ dayIdx, hour });
+      setRangeEnd({ dayIdx, hour });
+    }, 400); // 600ms : appui long plus réactif
   };
 
   const handleTouchMove = (e) => {
     if (e.touches.length > 1) return;
+    if (!longPressTriggered.current) {
+      // Si on bouge avant 1s, annule la sélection et laisse le scroll natif
+      clearTimeout(longPressTimeout.current);
+      longPressTimeout.current = null;
+      return;
+    }
+    // Après appui long validé, comportement de sélection multi-heures
     const touch = e.touches[0];
-    // Correction : toujours trouver la case horaire même si on est sur un enfant
     let el = document.elementFromPoint(touch.clientX, touch.clientY);
     while (el && (!el.getAttribute('data-day') || !el.getAttribute('data-hour')) && el.parentElement) {
       el = el.parentElement;
@@ -258,6 +271,7 @@ export default function AbsenceCalendar() {
   };
 
   const handleTouchEnd = (e) => {
+    clearTimeout(longPressTimeout.current);
     document.body.style.overflow = '';
     if (touchState.current.selecting && touchState.current.start && touchState.current.end) {
       setSelecting(false);
@@ -277,6 +291,7 @@ export default function AbsenceCalendar() {
   };
 
   const handleTouchCancel = (e) => {
+    clearTimeout(longPressTimeout.current);
     document.body.style.overflow = '';
     setSelecting(false);
     setRangeStart(null);
