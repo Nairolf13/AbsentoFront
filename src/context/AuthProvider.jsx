@@ -22,11 +22,12 @@ export function AuthProvider({ children }) {
       localStorage.setItem("token", token);
       const decoded = decodeJWT(token);
       if (decoded) {
+        // Appelle l’API pour avoir le profil complet
         getUserProfile(decoded.id, token)
           .then(profile => setUser(profile))
           .catch(err => {
             console.error('Erreur lors du chargement du profil utilisateur:', err);
-            setUser({ id: decoded.id, role: decoded.role }); 
+            setUser({ id: decoded.id, role: decoded.role }); // fallback minimal
           });
       } else {
         setUser(null);

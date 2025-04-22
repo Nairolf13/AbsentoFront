@@ -5,7 +5,7 @@ import { addDays, startOfWeek, format, isSameDay } from 'date-fns';
 import { fetchEmployees } from '../../api/employees';
 import { fetchEmployeePlanning, setEmployeePlanning, deleteEmployeePlanning } from '../../api/planning';
 import { useAuth } from '../../context/AuthProvider';
-import ConfirmModal from '../ui/ConfirmModal'; 
+import ConfirmModal from '../ui/ConfirmModal'; // Importez votre composant ConfirmModal
 import TaskList from "./TaskList";
 import { ChevronLeftIcon, ChevronRightIcon, PlusIcon } from '@heroicons/react/24/outline';
 import ReactDOM from "react-dom";
@@ -204,6 +204,7 @@ export default function AbsenceCalendar() {
     startY: 0,
   });
 
+  // Gestion appui long pour sélection mobile, compatible multi-heures
   const longPressTimeout = React.useRef(null);
   const longPressTriggered = React.useRef(false);
 
@@ -225,16 +226,18 @@ export default function AbsenceCalendar() {
       setSelecting(true);
       setRangeStart({ dayIdx, hour });
       setRangeEnd({ dayIdx, hour });
-    }, 400); 
+    }, 400); // 600ms : appui long plus réactif
   };
 
   const handleTouchMove = (e) => {
     if (e.touches.length > 1) return;
     if (!longPressTriggered.current) {
+      // Si on bouge avant 1s, annule la sélection et laisse le scroll natif
       clearTimeout(longPressTimeout.current);
       longPressTimeout.current = null;
       return;
     }
+    // Après appui long validé, comportement de sélection multi-heures
     const touch = e.touches[0];
     let el = document.elementFromPoint(touch.clientX, touch.clientY);
     while (el && (!el.getAttribute('data-day') || !el.getAttribute('data-hour')) && el.parentElement) {
@@ -246,7 +249,7 @@ export default function AbsenceCalendar() {
       if (touchState.current.selecting && dayIdx === touchState.current.dayIdx) {
         setRangeEnd({ dayIdx, hour });
         touchState.current.end = { dayIdx, hour };
-        e.preventDefault(); 
+        e.preventDefault(); // Bloque le scroll dès qu'on glisse dans la colonne
       }
     }
   };
@@ -280,7 +283,9 @@ export default function AbsenceCalendar() {
     touchState.current = { selecting: false, start: null, end: null, dayIdx: null, startX: 0, startY: 0 };
   };
 
+  // Gestion tactile pour mobile
   const getSlotFromTouch = (e) => {
+    // Trouve l'élément cible de la touche (div[data-day][data-hour])
     const touch = e.touches[0];
     const el = document.elementFromPoint(touch.clientX, touch.clientY);
     if (!el) return null;
@@ -292,6 +297,7 @@ export default function AbsenceCalendar() {
     return null;
   };
 
+  // Correction gestion tactile mobile : empêche le scroll et garantit la sélection
   const handleSlotMouseDown = (dayIdx, hour) => {
     setSelecting(true);
     setRangeStart({ dayIdx, hour });
@@ -309,7 +315,7 @@ export default function AbsenceCalendar() {
     if (rangeStart && rangeEnd) {
       setModalSlot({ dayIdx: rangeStart.dayIdx, start: Math.min(rangeStart.hour, rangeEnd.hour), end: Math.max(rangeStart.hour, rangeEnd.hour) });
       setTaskLabel("");
-      setTimeout(() => setModalOpen(true), 0); 
+      setTimeout(() => setModalOpen(true), 0); // Force l'ouverture après le render
     } else {
       setModalSlot(null);
       setTaskLabel("");
@@ -329,8 +335,10 @@ export default function AbsenceCalendar() {
     return hour >= minH && hour <= maxH;
   };
 
+  // 1. Ref pour le conteneur de grille mobile
   const mobileGridRef = React.useRef(null);
 
+  // 2. useEffect pour attacher le listener touchmove non passif
   useEffect(() => {
     const grid = mobileGridRef.current;
     if (!grid) return;
@@ -341,8 +349,10 @@ export default function AbsenceCalendar() {
 
   return (
     <div className="w-full">
+      {/* MOBILE : planning compact, UX++ */}
       <div className="block lg:hidden">
         <div className="bg-white rounded-2xl shadow-md p-3 mt-2">
+          {/* Header semaine mobile */}
           <div className="flex items-center justify-between mb-2">
             <button onClick={() => setWeekOffset(weekOffset - 1)} className="p-2 rounded-full bg-primary/10 hover:bg-primary/20 text-primary">
               <ChevronLeftIcon className="w-6 h-6" />
@@ -354,6 +364,7 @@ export default function AbsenceCalendar() {
               <ChevronRightIcon className="w-6 h-6" />
             </button>
           </div>
+          {/* Jours de la semaine (compact, horizontal) */}
           <div className="flex w-full border-b border-accent mb-2">
             {days.map((date, idx) => (
               <div key={idx} className="flex-1 flex flex-col items-center py-1 px-0">
@@ -362,6 +373,7 @@ export default function AbsenceCalendar() {
               </div>
             ))}
           </div>
+          {/* Grille planning : une ligne par heure, colonnes jours */}
           <div className="overflow-x-auto" ref={mobileGridRef}>
             <div className="flex flex-col">
               {HOURS.map((h) => (
@@ -407,14 +419,18 @@ export default function AbsenceCalendar() {
             </div>
           </div>
         </div>
+        {/* Bloc tâches sous le planning */}
         <div className="bg-white rounded-2xl shadow p-4 mt-4">
           <h4 className="text-lg font-semibold text-primary mb-2">Mes tâches</h4>
           <TaskList />
         </div>
       </div>
+      {/* Desktop : affichage classique en flex-row */}
       <div className="hidden lg:flex flex-col lg:flex-row h-full w-full">
+        {/* Sidebar calendrier */}
         <aside className="w-full lg:w-64 bg-white border-r border-secondary flex flex-col items-center py-6">
           <div className="w-full px-2">
+            {/* Sélecteur d'employé pour manager/rh/admin */}
             {user && ["ADMIN", "MANAGER", "RH"].includes(user.role) && (
               <div className="mb-4">
                 <input
@@ -438,6 +454,7 @@ export default function AbsenceCalendar() {
                 </select>
               </div>
             )}
+            {/* Correction : calendarType="iso8601" fonctionne */}
             <div className="w-full">
               <Calendar
                 locale="fr-FR"
@@ -458,7 +475,9 @@ export default function AbsenceCalendar() {
             </div>
           </div>
         </aside>
+        {/* Vue planning semaine */}
         <main className="w-full lg:flex-1 flex flex-col bg-accent mt-6 lg:mt-0" style={{maxWidth: '100vw', overflowX: 'auto'}}>
+          {/* En-têtes jours */}
           <div className="flex border-b border-secondary bg-white min-w-[350px] md:min-w-[600px] lg:min-w-[800px]">
             <div className="w-12 md:w-14 lg:w-16" />
             {days.map((date, idx) => (
@@ -467,7 +486,9 @@ export default function AbsenceCalendar() {
               </div>
             ))}
           </div>
+          {/* Grille horaires */}
           <div className="flex-1 flex overflow-x-auto select-none min-w-[350px] md:min-w-[600px] lg:min-w-[800px]" onMouseUp={handleSlotMouseUp}>
+            {/* Colonne heures */}
             <div className="w-12 md:w-14 lg:w-16 flex flex-col">
               {HOURS.map((h) => (
                 <div key={h} className="h-16 flex items-center justify-center text-xs text-secondary border-b border-accent">
@@ -475,6 +496,7 @@ export default function AbsenceCalendar() {
                 </div>
               ))}
             </div>
+            {/* Colonnes jours */}
             {days.map((date, dayIdx) => (
               <div key={dayIdx} className="flex-1 flex flex-col border-l border-secondary">
                 {HOURS.map((h) => {
@@ -508,6 +530,7 @@ export default function AbsenceCalendar() {
               </div>
             ))}
           </div>
+          {/* Modal d'édition avec bouton supprimer */}
           {modalOpen && modalSlot && ReactDOM.createPortal(
             <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center" style={{ zIndex: 9999 }}>
               <div className="bg-white rounded-xl p-6 w-full max-w-xs shadow-lg mx-2">
@@ -538,6 +561,7 @@ export default function AbsenceCalendar() {
             </div>,
             document.body
           )}
+          {/* Modal de confirmation suppression */}
           <ConfirmModal
             open={modalDeleteOpen}
             title="Supprimer la tâche ?"

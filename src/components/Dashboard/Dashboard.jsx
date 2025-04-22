@@ -28,12 +28,14 @@ const icons = {
 };
 
 export default function Dashboard() {
+  // TOUS les hooks d'abord, sans aucune condition ni return avant eux
   const { user } = useAuth();
   const location = useLocation();
   const { '*': subroute } = useParams();
   const navigate = useNavigate();
   const [burgerOpen, setBurgerOpen] = useState(false);
 
+  // Mapping entre clé d'onglet et sous-route
   const tabToRoute = {
     calendar: '',
     absence: 'absence',
@@ -50,8 +52,10 @@ export default function Dashboard() {
     employes: 'employes',
   };
 
+  // Onglet actif dérivé de l'URL uniquement
   const activeTab = routeToTab[(subroute || '').split('/')[0]] || 'calendar';
 
+  // Demande au Header de rafraîchir les notifications à chaque clic sur la sidebar
   const handleSidebarClick = (key) => {
     navigate(`/dashboard/${tabToRoute[key]}`);
     window.dispatchEvent(new CustomEvent("refreshNotifications"));
@@ -70,6 +74,7 @@ export default function Dashboard() {
     }
   }, [location.state, activeTab, navigate, location.pathname, location.key]);
 
+  // Correction : détecte bien l'onglet calendrier
   const isCalendarTab = activeTab === 'calendar';
 
   const sidebarItems = [
@@ -84,7 +89,9 @@ export default function Dashboard() {
 
   return (
     <div className="h-screen w-full">
+      {/* Mobile layout */}
       <div className="md:hidden flex flex-col h-full bg-accent">
+        {/* Header avec menu burger tout en haut à gauche et titre centré */}
         <header className="relative flex items-center justify-center px-4 py-3 bg-accent border-b border-secondary">
           <button
             className="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-xl bg-primary/10 text-primary focus:outline-none"
@@ -101,6 +108,7 @@ export default function Dashboard() {
           </div>
         </header>
 
+        {/* Menu burger drawer */}
         {burgerOpen && (
           <div className="fixed inset-0 z-50 bg-black/40 flex">
             <nav className="bg-white w-64 h-full shadow-lg p-6 flex flex-col">
@@ -130,6 +138,7 @@ export default function Dashboard() {
           </div>
         )}
 
+        {/* KPI cards élargies sur toute la largeur */}
         <div className="flex gap-4 px-4 pt-6 w-full">
           <div className="flex-1 bg-white rounded-2xl p-5 flex flex-col items-center shadow border border-primary/30 min-w-0">
             <div className="text-2xl font-bold text-secondary">45</div>
@@ -145,13 +154,16 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* Affichage dynamique via Outlet (comme sur desktop) */}
         <div className="flex-1 flex flex-col min-h-0">
           <Outlet />
         </div>
 
       </div>
 
+      {/* Desktop layout (inchangé) */}
       <div className="hidden md:flex h-screen bg-accent">
+        {/* Sidebar */}
         <aside className="w-20 bg-secondary flex flex-col items-center py-6 gap-4">
           {sidebarItems.map((item) => (
             <button
@@ -164,7 +176,9 @@ export default function Dashboard() {
             </button>
           ))}
         </aside>
+        {/* Main content desktop (inchangé) */}
         <main className="flex-1 flex flex-col min-w-0">
+          {/* Header */}
           <header className="flex items-center justify-between px-10 py-6 bg-accent border-b border-secondary">
             <div className="text-2xl font-semibold text-secondary flex items-center gap-2">
               Bonjour
@@ -176,6 +190,7 @@ export default function Dashboard() {
               <option>Mon périmètre</option>
             </select>
           </header>
+          {/* Stats cards */}
           <div className="flex gap-6 px-10 py-6">
             <div className="flex-1 bg-white rounded-2xl p-6 flex flex-col items-center shadow border border-primary/30">
               <div className="text-3xl font-bold text-secondary">45</div>
@@ -190,6 +205,7 @@ export default function Dashboard() {
               <div className="text-secondary mt-2">Mes tickets ouverts</div>
             </div>
           </div>
+          {/* Main grid: demandes + tâches */}
           <div className="flex flex-col lg:flex-row flex-1 gap-6 px-4 md:px-10 pb-10 min-h-0">
             <section className="flex-1 bg-white rounded-2xl shadow p-6 overflow-y-auto flex flex-col min-h-0">
               {user ? (
@@ -200,6 +216,7 @@ export default function Dashboard() {
                 </div>
               )}
             </section>
+            {/* Tâches à faire : affiché UNIQUEMENT sur le calendrier */}
             {isCalendarTab && user && (
               <TaskList
                 userId={user.id}

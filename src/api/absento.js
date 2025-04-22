@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { API_URL } from './config';
 
+// Sécurisation : trim email et password pour éviter les espaces involontaires
 export const login = async (email, password) => {
   const { data } = await axios.post(`${API_URL}/auth/login`, {
     email: email.trim(),
@@ -80,14 +81,14 @@ export const getMyAbsences = async (token) => {
 };
 
 export const validateAbsence = async (absenceId, token) => {
-  const { data } = await axios.patch(`${API_URL}/absences/valider/${absenceId}`, {}, {
+  const { data } = await axios.patch(`${API_URL}/absences/${absenceId}/valider`, {}, {
     headers: { Authorization: `Bearer ${token}` },
   });
   return data;
 };
 
 export const refuseAbsence = async (absenceId, token) => {
-  const { data } = await axios.patch(`${API_URL}/absences/refuser/${absenceId}`, {}, {
+  const { data } = await axios.patch(`${API_URL}/absences/${absenceId}/refuser`, {}, {
     headers: { Authorization: `Bearer ${token}` },
   });
   return data;
@@ -101,15 +102,16 @@ export const getAbsencesSansRemplacant = async (token) => {
 };
 
 export const getAllAbsences = async (token) => {
-  const { data } = await axios.get(`${API_URL}/absences/toutes`, {
+  const { data } = await axios.get(`${API_URL}/absences`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   return data;
 };
 
+// Ajoute une fonction pour récupérer le profil utilisateur complet
 export const getUserProfile = async (userId, token) => {
   const { data } = await axios.get(`${API_URL}/utilisateur/${userId}`, {
-    headers: { Authorization: `Bearer ${token}` }
+    headers: { Authorization: `Bearer ${token}` },
   });
   return data;
 };

@@ -1,7 +1,8 @@
 import React from "react";
 
+// TOUS les hooks seraient ici (aucun dans ce composant, donc c'est OK)
+// Toujours rendre le composant, masquer visuellement si open === false
 export default function ConfirmModal({ open, title, message, onConfirm, onCancel, confirmText = "Confirmer", cancelText = "Annuler" }) {
-
   return (
     <div style={{ display: open ? 'flex' : 'none' }} className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
       <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full animate-fade-in">
