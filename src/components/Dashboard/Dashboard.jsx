@@ -158,17 +158,11 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Calendrier condensé (1 jour visible, scroll horizontal possible) */}
-        {activeTab === 'calendar' && (
-          <div className="px-4 pt-6">
-            <Calendar condensedMobile />
-          </div>
-        )}
-
-        {/* Tâches à faire */}
-        <div className="px-4 pt-6 pb-4">
-          <TaskList mobile />
+        {/* Affichage dynamique via Outlet (comme sur desktop) */}
+        <div className="flex-1 flex flex-col min-h-0">
+          <Outlet />
         </div>
+
       </div>
 
       {/* Desktop layout (inchangé) */}

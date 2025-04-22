@@ -6,6 +6,8 @@ import { fetchEmployees } from '../../api/employees';
 import { fetchEmployeePlanning, setEmployeePlanning, deleteEmployeePlanning } from '../../api/planning';
 import { useAuth } from '../../context/AuthProvider';
 import ConfirmModal from '../ui/ConfirmModal'; // Importez votre composant ConfirmModal
+import TaskList from "./TaskList";
+import { ChevronLeftIcon, ChevronRightIcon, PlusIcon } from '@heroicons/react/24/outline';
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const DAYS = ["Lun.", "Mar.", "Mer.", "Jeu.", "Ven.", "Sam.", "Dim."];
@@ -245,13 +247,18 @@ export default function AbsenceCalendar() {
     if (!touchState.current.selecting) return;
     setSelecting(false);
     const { start, end } = touchState.current;
-    setModalSlot(
-      start && end
-        ? { dayIdx: start.dayIdx, start: Math.min(start.hour, end.hour), end: Math.max(start.hour, end.hour) }
-        : null
-    );
-    setTaskLabel("");
-    if (start && end) setModalOpen(true);
+    if (start && end) {
+      if (start.hour === end.hour) {
+        setModalSlot({ dayIdx: start.dayIdx, hour: start.hour });
+      } else {
+        setModalSlot({ dayIdx: start.dayIdx, start: Math.min(start.hour, end.hour), end: Math.max(start.hour, end.hour) });
+      }
+      setTaskLabel("");
+      setTimeout(() => setModalOpen(true), 0);
+    } else {
+      setModalSlot(null);
+      setTaskLabel("");
+    }
     setRangeStart(null);
     setRangeEnd(null);
     touchState.current = { selecting: false, start: null, end: null };
@@ -273,13 +280,14 @@ export default function AbsenceCalendar() {
   // Fin sélection souris
   const handleSlotMouseUp = () => {
     setSelecting(false);
-    setModalSlot(
-      rangeStart && rangeEnd
-        ? { dayIdx: rangeStart.dayIdx, start: Math.min(rangeStart.hour, rangeEnd.hour), end: Math.max(rangeStart.hour, rangeEnd.hour) }
-        : null
-    );
-    setTaskLabel("");
-    if (rangeStart && rangeEnd) setModalOpen(true);
+    if (rangeStart && rangeEnd) {
+      setModalSlot({ dayIdx: rangeStart.dayIdx, start: Math.min(rangeStart.hour, rangeEnd.hour), end: Math.max(rangeStart.hour, rangeEnd.hour) });
+      setTaskLabel("");
+      setTimeout(() => setModalOpen(true), 0); // Force l'ouverture après le render
+    } else {
+      setModalSlot(null);
+      setTaskLabel("");
+    }
     setRangeStart(null);
     setRangeEnd(null);
   };
@@ -297,153 +305,226 @@ export default function AbsenceCalendar() {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row h-full w-full">
-      {/* Sidebar calendrier */}
-      <aside className="w-full lg:w-64 bg-white border-r border-secondary flex flex-col items-center py-6">
-        <div className="w-full px-2">
-          {/* Sélecteur d'employé pour manager/rh/admin */}
-          {user && ["ADMIN", "MANAGER", "RH"].includes(user.role) && (
-            <div className="mb-4">
-              <input
-                type="text"
-                className="w-full mb-2 rounded border px-2 py-1 text-xs"
-                placeholder="Rechercher un employé..."
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-              />
-              <select
-                className="w-full rounded border px-2 py-1 text-xs"
-                value={selectedEmployeeId || ''}
-                onChange={e => setSelectedEmployeeId(e.target.value)}
-                disabled={loadingEmployees}
-              >
-                {filteredEmployees.map(emp => (
-                  <option key={emp.id} value={emp.id}>
-                    {emp.nom} {emp.prenom}
-                  </option>
-                ))}
-              </select>
+    <div className="w-full">
+      {/* MOBILE : planning compact, UX++ */}
+      <div className="block lg:hidden">
+        <div className="bg-white rounded-2xl shadow-md p-3 mt-2">
+          {/* Header semaine mobile */}
+          <div className="flex items-center justify-between mb-2">
+            <button onClick={() => setWeekOffset(weekOffset - 1)} className="p-2 rounded-full bg-primary/10 hover:bg-primary/20 text-primary">
+              <ChevronLeftIcon className="w-6 h-6" />
+            </button>
+            <div className="font-semibold text-primary text-base text-center flex-1">
+              Semaine du {format(weekStart, 'dd MMM yyyy')}
             </div>
-          )}
-          {/* Correction : calendarType="iso8601" fonctionne */}
-          <div className="w-full">
-            <Calendar
-              locale="fr-FR"
-              value={calendarDate}
-              onChange={setCalendarDate}
-              calendarType="iso8601"
-              className="rounded-xl border-none shadow w-full"
-              tileClassName={({ date }) => isSameDay(date, calendarDate) ? "!bg-primary !text-white rounded-full" : ""}
-            />
+            <button onClick={() => setWeekOffset(weekOffset + 1)} className="p-2 rounded-full bg-primary/10 hover:bg-primary/20 text-primary">
+              <ChevronRightIcon className="w-6 h-6" />
+            </button>
           </div>
-        </div>
-        <div className="mt-6 w-full px-4">
-          <button className="bg-primary text-secondary rounded-xl px-4 py-2 w-full font-semibold mb-2">Aujourd'hui</button>
-          <div className="flex justify-between items-center">
-            <button onClick={() => setWeekOffset(weekOffset - 1)} className="text-secondary">←</button>
-            <span className="font-semibold text-secondary">Semaine du {format(weekStart, 'dd MMM yyyy')}</span>
-            <button onClick={() => setWeekOffset(weekOffset + 1)} className="text-secondary">→</button>
-          </div>
-        </div>
-      </aside>
-
-      {/* Vue planning semaine */}
-      <main className="w-full lg:flex-1 flex flex-col bg-accent mt-6 lg:mt-0" style={{maxWidth: '100vw', overflowX: 'auto'}}>
-        {/* En-têtes jours */}
-        <div className="flex border-b border-secondary bg-white min-w-[700px] md:min-w-[900px] lg:min-w-[1100px]">
-          <div className="w-16" />
-          {days.map((date, idx) => (
-            <div key={idx} className="flex-1 py-3 px-2 text-center font-semibold text-secondary border-l border-secondary">
-              {DAYS[idx]}<br />{format(date, 'dd/MM')}
-            </div>
-          ))}
-        </div>
-        {/* Grille horaires */}
-        <div className="flex-1 flex overflow-x-auto select-none min-w-[700px] md:min-w-[900px] lg:min-w-[1100px]" onMouseUp={handleSlotMouseUp}>
-          {/* Colonne heures */}
-          <div className="w-16 flex flex-col">
-            {HOURS.map((h) => (
-              <div key={h} className="h-16 flex items-center justify-center text-xs text-secondary border-b border-accent">
-                {h}:00
+          {/* Jours de la semaine (compact, horizontal) */}
+          <div className="flex w-full border-b border-accent mb-2">
+            {days.map((date, idx) => (
+              <div key={idx} className="flex-1 flex flex-col items-center py-1 px-0">
+                <span className="text-xs font-bold text-secondary">{DAYS[idx]}</span>
+                <span className="text-xs text-primary">{format(date, 'dd/MM')}</span>
               </div>
             ))}
           </div>
-          {/* Colonnes jours */}
-          {days.map((date, dayIdx) => (
-            <div key={dayIdx} className="flex-1 flex flex-col border-l border-secondary">
-              {HOURS.map((h) => {
-                const event = events.find(ev => ev.day === dayIdx && ev.hour === h);
-                const selected = isSlotSelected(dayIdx, h);
-                return (
-                  <div
-                    key={h}
-                    data-day={dayIdx}
-                    data-hour={h}
-                    className={`h-16 relative border-b border-accent cursor-pointer group ${selected ? 'bg-primary/20' : ''}`}
-                    onMouseDown={() => handleSlotMouseDown(dayIdx, h)}
-                    onMouseEnter={() => handleSlotMouseEnter(dayIdx, h)}
-                    onTouchStart={handleTouchStart(dayIdx, h)}
-                    onTouchMove={handleTouchMove}
-                    onTouchEnd={handleTouchEnd}
-                    style={{ touchAction: 'none' }}
-                  >
-                    {event && (
-                      <div className={`absolute inset-1 rounded-lg shadow flex items-center px-2 text-xs font-semibold text-white ${event.color}`}>
-                        {event.label}
+          {/* Grille planning : une ligne par heure, colonnes jours */}
+          <div className="overflow-x-auto">
+            <div className="flex flex-col">
+              {HOURS.map((h) => (
+                <div key={h} className="flex border-b border-accent last:border-0 min-h-[36px]">
+                  <div className="w-11 flex items-center justify-center text-xs text-secondary bg-accent/70 font-semibold border-r border-accent">{h}:00</div>
+                  {days.map((date, dayIdx) => {
+                    const event = events.find(ev => ev.day === dayIdx && ev.hour === h);
+                    const selected = isSlotSelected(dayIdx, h);
+                    return (
+                      <div
+                        key={dayIdx}
+                        className={`flex-1 relative cursor-pointer group min-w-[36px] max-w-[48px] flex items-center justify-center ${selected ? 'bg-primary/20' : 'bg-white'} border-r border-accent last:border-0`}
+                        onClick={() => handleSlotClick(dayIdx, h)}
+                        onTouchStart={handleTouchStart(dayIdx, h)}
+                        onTouchMove={handleTouchMove}
+                        onTouchEnd={handleTouchEnd}
+                        style={{ minHeight: 36, touchAction: 'none' }}
+                      >
+                        {event ? (
+                          <span className="block w-full h-full rounded-lg bg-primary text-white text-xs font-semibold flex items-center justify-center px-1">
+                            {event.label}
+                          </span>
+                        ) : (
+                          <button
+                            className="opacity-0 group-hover:opacity-100 absolute inset-0 flex items-center justify-center w-full h-full text-primary"
+                            style={{ transition: 'opacity 0.2s' }}
+                            onClick={e => { e.stopPropagation(); handleSlotClick(dayIdx, h); }}
+                            tabIndex={-1}
+                          >
+                            <PlusIcon className="w-5 h-5" />
+                          </button>
+                        )}
                       </div>
-                    )}
-                    {!event && (
-                      <div className="absolute inset-1 flex items-center justify-center text-xs text-gray-300 opacity-0 group-hover:opacity-100 transition pointer-events-none select-none">
-                        + Ajouter tâche
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          ))}
-        </div>
-        {/* Modal d'édition avec bouton supprimer */}
-        {modalOpen && modalSlot && (
-          <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-            <div className="bg-white rounded-xl p-6 w-80 shadow-lg">
-              <h3 className="text-lg font-semibold mb-4">Assigner ou supprimer une tâche</h3>
-              {modalSlot.start !== undefined && modalSlot.end !== undefined ? (
-                <div className="mb-2 text-sm">Jour : <b>{DAYS[modalSlot.dayIdx]}</b> de <b>{modalSlot.start}:00</b> à <b>{modalSlot.end}:00</b></div>
-              ) : (
-                <div className="mb-2 text-sm">Jour : <b>{DAYS[modalSlot.dayIdx]}</b> à <b>{modalSlot.hour}:00</b></div>
-              )}
-              <input
-                type="text"
-                className="w-full border rounded px-3 py-2 mb-4"
-                placeholder="Tâche à assigner..."
-                value={taskLabel}
-                onChange={e => setTaskLabel(e.target.value)}
-                autoFocus
-              />
-              <div className="flex flex-col gap-2 mt-4">
-                <button className="px-4 py-2 rounded bg-gray-200 w-full" onClick={() => setModalOpen(false)}>Annuler</button>
-                <button className="px-4 py-2 rounded bg-red-500 text-white font-semibold w-full" onClick={handleDeleteTask}>Supprimer</button>
-                {modalSlot.start !== undefined && modalSlot.end !== undefined ? (
-                  <button className="px-4 py-2 rounded bg-primary text-white font-semibold w-full" onClick={handleSaveTaskRange} disabled={!taskLabel.trim()}>Enregistrer</button>
-                ) : (
-                  <button className="px-4 py-2 rounded bg-primary text-white font-semibold w-full" onClick={handleSaveTask} disabled={!taskLabel.trim()}>Enregistrer</button>
-                )}
-              </div>
+                    );
+                  })}
+                </div>
+              ))}
             </div>
           </div>
-        )}
-        {/* Modal de confirmation suppression */}
-        <ConfirmModal
-          open={modalDeleteOpen}
-          title="Supprimer la tâche ?"
-          message="Cette action est irréversible. Voulez-vous vraiment supprimer cette tâche du planning ?"
-          onConfirm={confirmDeleteTask}
-          onCancel={cancelDeleteTask}
-          confirmText="Supprimer"
-          cancelText="Annuler"
-        />
-      </main>
+        </div>
+        {/* Bloc tâches sous le planning */}
+        <div className="bg-white rounded-2xl shadow p-4 mt-4">
+          <h4 className="text-lg font-semibold text-primary mb-2">Mes tâches</h4>
+          <TaskList />
+        </div>
+      </div>
+      {/* Desktop : affichage classique en flex-row */}
+      <div className="hidden lg:flex flex-col lg:flex-row h-full w-full">
+        {/* Sidebar calendrier */}
+        <aside className="w-full lg:w-64 bg-white border-r border-secondary flex flex-col items-center py-6">
+          <div className="w-full px-2">
+            {/* Sélecteur d'employé pour manager/rh/admin */}
+            {user && ["ADMIN", "MANAGER", "RH"].includes(user.role) && (
+              <div className="mb-4">
+                <input
+                  type="text"
+                  className="w-full mb-2 rounded border px-2 py-1 text-xs"
+                  placeholder="Rechercher un employé..."
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                />
+                <select
+                  className="w-full rounded border px-2 py-1 text-xs"
+                  value={selectedEmployeeId || ''}
+                  onChange={e => setSelectedEmployeeId(e.target.value)}
+                  disabled={loadingEmployees}
+                >
+                  {filteredEmployees.map(emp => (
+                    <option key={emp.id} value={emp.id}>
+                      {emp.nom} {emp.prenom}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            {/* Correction : calendarType="iso8601" fonctionne */}
+            <div className="w-full">
+              <Calendar
+                locale="fr-FR"
+                value={calendarDate}
+                onChange={setCalendarDate}
+                calendarType="iso8601"
+                className="rounded-xl border-none shadow w-full"
+                tileClassName={({ date }) => isSameDay(date, calendarDate) ? "!bg-primary !text-white rounded-full" : ""}
+              />
+            </div>
+          </div>
+          <div className="mt-6 w-full px-4">
+            <button className="bg-primary text-secondary rounded-xl px-4 py-2 w-full font-semibold mb-2">Aujourd'hui</button>
+            <div className="flex justify-between items-center">
+              <button onClick={() => setWeekOffset(weekOffset - 1)} className="text-secondary">←</button>
+              <span className="font-semibold text-secondary">Semaine du {format(weekStart, 'dd MMM yyyy')}</span>
+              <button onClick={() => setWeekOffset(weekOffset + 1)} className="text-secondary">→</button>
+            </div>
+          </div>
+        </aside>
+        {/* Vue planning semaine */}
+        <main className="w-full lg:flex-1 flex flex-col bg-accent mt-6 lg:mt-0" style={{maxWidth: '100vw', overflowX: 'auto'}}>
+          {/* En-têtes jours */}
+          <div className="flex border-b border-secondary bg-white min-w-[350px] md:min-w-[600px] lg:min-w-[800px]">
+            <div className="w-12 md:w-14 lg:w-16" />
+            {days.map((date, idx) => (
+              <div key={idx} className="flex-1 py-3 px-2 text-center font-semibold text-secondary border-l border-secondary">
+                {DAYS[idx]}<br />{format(date, 'dd/MM')}
+              </div>
+            ))}
+          </div>
+          {/* Grille horaires */}
+          <div className="flex-1 flex overflow-x-auto select-none min-w-[350px] md:min-w-[600px] lg:min-w-[800px]" onMouseUp={handleSlotMouseUp}>
+            {/* Colonne heures */}
+            <div className="w-12 md:w-14 lg:w-16 flex flex-col">
+              {HOURS.map((h) => (
+                <div key={h} className="h-16 flex items-center justify-center text-xs text-secondary border-b border-accent">
+                  {h}:00
+                </div>
+              ))}
+            </div>
+            {/* Colonnes jours */}
+            {days.map((date, dayIdx) => (
+              <div key={dayIdx} className="flex-1 flex flex-col border-l border-secondary">
+                {HOURS.map((h) => {
+                  const event = events.find(ev => ev.day === dayIdx && ev.hour === h);
+                  const selected = isSlotSelected(dayIdx, h);
+                  return (
+                    <div
+                      key={h}
+                      data-day={dayIdx}
+                      data-hour={h}
+                      className={`h-16 relative border-b border-accent cursor-pointer group ${selected ? 'bg-primary/20' : ''}`}
+                      onMouseDown={() => handleSlotMouseDown(dayIdx, h)}
+                      onMouseEnter={() => handleSlotMouseEnter(dayIdx, h)}
+                      onTouchStart={handleTouchStart(dayIdx, h)}
+                      onTouchMove={handleTouchMove}
+                      onTouchEnd={handleTouchEnd}
+                      style={{ touchAction: 'none' }}
+                    >
+                      {event && (
+                        <div className={`absolute inset-1 rounded-lg shadow flex items-center px-2 text-xs font-semibold text-white ${event.color}`}>
+                          {event.label}
+                        </div>
+                      )}
+                      {!event && (
+                        <div className="absolute inset-1 flex items-center justify-center text-xs text-gray-300 opacity-0 group-hover:opacity-100 transition pointer-events-none select-none">
+                          + Ajouter tâche
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+          {/* Modal d'édition avec bouton supprimer */}
+          {modalOpen && modalSlot && (
+            <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+              <div className="bg-white rounded-xl p-6 w-80 shadow-lg">
+                <h3 className="text-lg font-semibold mb-4">Assigner ou supprimer une tâche</h3>
+                {modalSlot.start !== undefined && modalSlot.end !== undefined ? (
+                  <div className="mb-2 text-sm">Jour : <b>{DAYS[modalSlot.dayIdx]}</b> de <b>{modalSlot.start}:00</b> à <b>{modalSlot.end}:00</b></div>
+                ) : (
+                  <div className="mb-2 text-sm">Jour : <b>{DAYS[modalSlot.dayIdx]}</b> à <b>{modalSlot.hour}:00</b></div>
+                )}
+                <input
+                  type="text"
+                  className="w-full border rounded px-3 py-2 mb-4"
+                  placeholder="Tâche à assigner..."
+                  value={taskLabel}
+                  onChange={e => setTaskLabel(e.target.value)}
+                  autoFocus
+                />
+                <div className="flex flex-col gap-2 mt-4">
+                  <button className="px-4 py-2 rounded bg-gray-200 w-full" onClick={() => setModalOpen(false)}>Annuler</button>
+                  <button className="px-4 py-2 rounded bg-red-500 text-white font-semibold w-full" onClick={handleDeleteTask}>Supprimer</button>
+                  {modalSlot.start !== undefined && modalSlot.end !== undefined ? (
+                    <button className="px-4 py-2 rounded bg-primary text-white font-semibold w-full" onClick={handleSaveTaskRange} disabled={!taskLabel.trim()}>Enregistrer</button>
+                  ) : (
+                    <button className="px-4 py-2 rounded bg-primary text-white font-semibold w-full" onClick={handleSaveTask} disabled={!taskLabel.trim()}>Enregistrer</button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+          {/* Modal de confirmation suppression */}
+          <ConfirmModal
+            open={modalDeleteOpen}
+            title="Supprimer la tâche ?"
+            message="Cette action est irréversible. Voulez-vous vraiment supprimer cette tâche du planning ?"
+            onConfirm={confirmDeleteTask}
+            onCancel={cancelDeleteTask}
+            confirmText="Supprimer"
+            cancelText="Annuler"
+          />
+        </main>
+      </div>
     </div>
   );
 }
