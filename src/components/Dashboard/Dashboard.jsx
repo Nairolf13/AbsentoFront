@@ -46,6 +46,7 @@ export default function Dashboard() {
   };
   const routeToTab = {
     '': 'calendar',
+    calendar: 'calendar',
     absence: 'absence',
     remplacement: 'remplacement',
     historique: 'historique',
@@ -76,6 +77,9 @@ export default function Dashboard() {
     }
   }, [location.state, activeTab, navigate, location.pathname, location.key]);
 
+  // Correction : détecte bien l'onglet calendrier
+  const isCalendarTab = activeTab === 'calendar';
+
   // Sidebar items (Absence et Remplacement ajoutés, Notifications retiré)
   const sidebarItems = [
     { key: "calendar", label: "Calendrier", icon: icons.calendar },
@@ -86,8 +90,6 @@ export default function Dashboard() {
   if (user?.role === "ADMIN") {
     sidebarItems.push({ key: "employes", label: "Employés", icon: icons.users });
   }
-
-  const isCalendarTab = location.pathname === "/dashboard" || location.pathname === "/dashboard/";
 
   return (
     <div className="h-screen w-full">

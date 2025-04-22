@@ -7,6 +7,10 @@ import ConfirmModal from "../ui/ConfirmModal";
 import "../ui/animations.css";
 
 export default function SuggestRemplacement() {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   const { token, user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -75,7 +79,7 @@ export default function SuggestRemplacement() {
   // Affichage principal
   if (!selectedAbsence) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-accent py-12">
+      <div className="min-h-screen flex flex-col items-center bg-accent py-8">
         <div className="bg-white rounded-2xl shadow-lg px-8 py-10 w-full max-w-2xl mx-auto">
           <h2 className="text-2xl font-bold mb-6 text-primary text-center">Absences à remplacer</h2>
           {loadingAbsences ? (
@@ -109,7 +113,7 @@ export default function SuggestRemplacement() {
 
   // Si une absence est sélectionnée, affiche la logique existante
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-accent py-12">
+    <div className="min-h-screen flex flex-col items-center bg-accent py-8">
       <div className="bg-white rounded-2xl shadow-lg px-8 py-10 w-full max-w-2xl mx-auto">
         <button className="mb-4 text-primary underline" onClick={() => setSelectedAbsence(null)}>
           ← Retour à la liste des absences
