@@ -1,9 +1,10 @@
 import React from "react";
 import { Navigate } from "react-router-dom";
-import useAuth from "../../hooks/useAuth";
+import { useAuth } from "../../context/AuthProvider";
 
 export default function PrivateRoute({ children }) {
-  const { token } = useAuth();
+  const auth = useAuth();
+  const { token } = auth;
   if (!token) {
     // LOG: Trace chaque redirection automatique vers /login
     console.warn('[PrivateRoute] Redirection vers /login car token absent ou null');

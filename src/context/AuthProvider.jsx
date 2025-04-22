@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { login } from "../api/absento";
+import { login, getUserProfile } from "../api/absento";
 import { decodeJWT } from "../utils/jwt";
 
 const AuthContext = createContext();
@@ -21,7 +21,17 @@ export function AuthProvider({ children }) {
     if (token) {
       localStorage.setItem("token", token);
       const decoded = decodeJWT(token);
-      setUser(decoded ? { id: decoded.id, role: decoded.role } : null);
+      if (decoded) {
+        // Appelle l’API pour avoir le profil complet
+        getUserProfile(decoded.id, token)
+          .then(profile => setUser(profile))
+          .catch(err => {
+            console.error('Erreur lors du chargement du profil utilisateur:', err);
+            setUser({ id: decoded.id, role: decoded.role }); // fallback minimal
+          });
+      } else {
+        setUser(null);
+      }
     } else {
       localStorage.removeItem("token");
       setUser(null);

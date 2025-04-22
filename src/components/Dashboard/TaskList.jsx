@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
-import useAuth from "../../hooks/useAuth";
+import { useAuth } from "../../context/AuthProvider";
 import ConfirmModal from "../ui/ConfirmModal";
 import "../ui/animations.css";
+import { API_URL } from '../../api/config';
 
 export default function TaskList() {
   const { user, token } = useAuth();
@@ -17,7 +18,7 @@ export default function TaskList() {
   useEffect(() => {
     if (!token) return;
     setLoading(true);
-    fetch(`${import.meta.env.VITE_API_URL}/tasks`, {
+    fetch(`${API_URL}/tasks`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
@@ -35,7 +36,7 @@ export default function TaskList() {
   const handleAdd = async (e) => {
     e.preventDefault();
     if (!newTask.trim()) return;
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/tasks`, {
+    const res = await fetch(`${API_URL}/tasks`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -54,7 +55,7 @@ export default function TaskList() {
   const handleDelete = (task) => setModalDelete({ open: true, task });
   const confirmDelete = async () => {
     if (!modalDelete.task) return;
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/tasks/${modalDelete.task.id}`, {
+    const res = await fetch(`${API_URL}/tasks/${modalDelete.task.id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -68,7 +69,7 @@ export default function TaskList() {
     setEditValue(title);
   };
   const handleEdit = async (id) => {
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/tasks/${id}`, {
+    const res = await fetch(`${API_URL}/tasks/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -85,7 +86,7 @@ export default function TaskList() {
 
   // Toggle completed
   const toggleCompleted = async (id, completed) => {
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/tasks/${id}`, {
+    const res = await fetch(`${API_URL}/tasks/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",

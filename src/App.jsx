@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation, Outlet } from "react-router-dom";
 import LoginForm from "./components/Auth/LoginForm";
 import RegisterForm from "./components/Auth/RegisterForm";
 import RequestAbsenceForm from "./components/Absence/RequestAbsenceForm";
@@ -9,10 +9,13 @@ import HeaderWithAuth from "./components/Layout/HeaderWithAuth";
 import PrivateRoute from "./components/Layout/PrivateRoute";
 import HomePage from "./pages/HomePage";
 import CreatePassword from "./pages/CreatePassword";
-import useAuth from "./hooks/useAuth";
+import { useAuth } from "./context/AuthProvider";
 import EmployeeAdmin from "./components/Employee/EmployeeAdmin";
 import RemplacementAdmin from "./pages/RemplacementAdmin";
 import Profile from "./components/Profile/Profile";
+import Calendar from "./components/Dashboard/Calendar";
+import HistoriqueAbsences from "./components/Dashboard/HistoriqueAbsences";
+import EmployeeDashboardTab from "./components/Employee/EmployeeDashboardTab";
 
 function AppContent() {
   const { pathname } = useLocation();
@@ -28,7 +31,15 @@ function AppContent() {
         <Route path="/remplacement-suggest" element={<PrivateRoute><RemplacementSuggestPage /></PrivateRoute>} />
         <Route path="/remplacement-admin" element={<PrivateRoute><RemplacementAdmin /></PrivateRoute>} />
         <Route path="/absence/request" element={<PrivateRoute><RequestAbsenceForm /></PrivateRoute>} />
-        <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+        <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>}>
+          {/* Redirection automatique de /dashboard vers /dashboard/calendar */}
+          <Route index element={<Navigate to="/dashboard/calendar" replace />} />
+          <Route path="calendar" element={<Calendar />} />
+          <Route path="absence" element={<RequestAbsenceForm />} />
+          <Route path="remplacement" element={<RemplacementSuggestPage />} />
+          <Route path="historique" element={<HistoriqueAbsences />} />
+          <Route path="employes" element={<EmployeeDashboardTab />} />
+        </Route>
         <Route path="/admin/employes" element={<PrivateRoute><EmployeeAdmin /></PrivateRoute>} />
         <Route path="/creer-mot-de-passe" element={<CreatePassword />} />
         <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />

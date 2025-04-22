@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { getMyAbsences, getAllAbsences, validateAbsence, refuseAbsence } from "../../api/absento";
 import { fetchEmployees } from "../../api/employees";
 import { proposerRemplacant } from "../../api/remplacement";
-import useAuth from "../../hooks/useAuth";
+import { useAuth } from "../../context/AuthProvider";
 
 const statusColors = {
   "En attente": "bg-yellow-300 text-yellow-900",

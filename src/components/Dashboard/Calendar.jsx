@@ -4,7 +4,7 @@ import 'react-calendar/dist/Calendar.css';
 import { addDays, startOfWeek, format, isSameDay } from 'date-fns';
 import { fetchEmployees } from '../../api/employees';
 import { fetchEmployeePlanning, setEmployeePlanning, deleteEmployeePlanning } from '../../api/planning';
-import useAuth from '../../hooks/useAuth';
+import { useAuth } from '../../context/AuthProvider';
 import ConfirmModal from '../ui/ConfirmModal'; // Importez votre composant ConfirmModal
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
@@ -73,16 +73,18 @@ export default function AbsenceCalendar() {
         const planning = await fetchEmployeePlanning(selectedEmployeeId, from, to, token);
         // Mapping pour affichage
         setEvents(
-          planning.map(ev => {
-            const d = new Date(ev.date);
-            return {
-              id: ev.id,
-              day: d.getDay() === 0 ? 6 : d.getDay() - 1, // Lundi=0 ...
-              hour: d.getHours(),
-              label: ev.label,
-              color: "bg-primary"
-            }
-          })
+          planning
+            .filter(ev => ev.label && ev.label.trim() !== "")
+            .map(ev => {
+              const d = new Date(ev.date);
+              return {
+                id: ev.id,
+                day: d.getDay() === 0 ? 6 : d.getDay() - 1, // Lundi=0 ...
+                hour: d.getHours(),
+                label: ev.label,
+                color: "bg-primary"
+              }
+            })
         );
       } catch {
         setEvents([]);
@@ -105,16 +107,20 @@ export default function AbsenceCalendar() {
       const from = format(weekStart, 'yyyy-MM-dd');
       const to = format(addDays(weekStart, 6), 'yyyy-MM-dd');
       const planning = await fetchEmployeePlanning(selectedEmployeeId, from, to, token);
-      setEvents(planning.map(ev => {
-        const d = new Date(ev.date);
-        return {
-          id: ev.id,
-          day: d.getDay() === 0 ? 6 : d.getDay() - 1,
-          hour: d.getHours(),
-          label: ev.label,
-          color: "bg-primary"
-        }
-      }));
+      setEvents(
+        planning
+          .filter(ev => ev.label && ev.label.trim() !== "")
+          .map(ev => {
+            const d = new Date(ev.date);
+            return {
+              id: ev.id,
+              day: d.getDay() === 0 ? 6 : d.getDay() - 1,
+              hour: d.getHours(),
+              label: ev.label,
+              color: "bg-primary"
+            }
+          })
+      );
     }
   };
 
@@ -132,16 +138,20 @@ export default function AbsenceCalendar() {
       const from = format(weekStart, 'yyyy-MM-dd');
       const to = format(addDays(weekStart, 6), 'yyyy-MM-dd');
       const planning = await fetchEmployeePlanning(selectedEmployeeId, from, to, token);
-      setEvents(planning.map(ev => {
-        const d = new Date(ev.date);
-        return {
-          id: ev.id,
-          day: d.getDay() === 0 ? 6 : d.getDay() - 1,
-          hour: d.getHours(),
-          label: ev.label,
-          color: "bg-primary"
-        }
-      }));
+      setEvents(
+        planning
+          .filter(ev => ev.label && ev.label.trim() !== "")
+          .map(ev => {
+            const d = new Date(ev.date);
+            return {
+              id: ev.id,
+              day: d.getDay() === 0 ? 6 : d.getDay() - 1,
+              hour: d.getHours(),
+              label: ev.label,
+              color: "bg-primary"
+            }
+          })
+      );
     }
   };
 
@@ -174,16 +184,20 @@ export default function AbsenceCalendar() {
       const from = format(weekStart, 'yyyy-MM-dd');
       const to = format(addDays(weekStart, 6), 'yyyy-MM-dd');
       const planning = await fetchEmployeePlanning(selectedEmployeeId, from, to, token);
-      setEvents(planning.map(ev => {
-        const d = new Date(ev.date);
-        return {
-          id: ev.id,
-          day: d.getDay() === 0 ? 6 : d.getDay() - 1,
-          hour: d.getHours(),
-          label: ev.label,
-          color: "bg-primary"
-        }
-      }));
+      setEvents(
+        planning
+          .filter(ev => ev.label && ev.label.trim() !== "")
+          .map(ev => {
+            const d = new Date(ev.date);
+            return {
+              id: ev.id,
+              day: d.getDay() === 0 ? 6 : d.getDay() - 1,
+              hour: d.getHours(),
+              label: ev.label,
+              color: "bg-primary"
+            }
+          })
+      );
     }
   };
 
@@ -194,22 +208,71 @@ export default function AbsenceCalendar() {
   const [rangeStart, setRangeStart] = useState(null); // { dayIdx, hour }
   const [rangeEnd, setRangeEnd] = useState(null);
 
-  // Début sélection
+  // --- Touch events pour mobile ---
+  const touchState = React.useRef({ selecting: false, start: null, end: null });
+
+  const getSlotFromTouch = (e) => {
+    // Trouve l'élément cible de la touche (div[data-day][data-hour])
+    const touch = e.touches[0];
+    const el = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (!el) return null;
+    const dayIdx = el.getAttribute('data-day');
+    const hour = el.getAttribute('data-hour');
+    if (dayIdx !== null && hour !== null) {
+      return { dayIdx: parseInt(dayIdx), hour: parseInt(hour) };
+    }
+    return null;
+  };
+
+  const handleTouchStart = (dayIdx, hour) => (e) => {
+    e.preventDefault();
+    setSelecting(true);
+    setRangeStart({ dayIdx, hour });
+    setRangeEnd({ dayIdx, hour });
+    touchState.current = { selecting: true, start: { dayIdx, hour }, end: { dayIdx, hour } };
+  };
+
+  const handleTouchMove = (e) => {
+    if (!touchState.current.selecting) return;
+    const slot = getSlotFromTouch(e);
+    if (slot && slot.dayIdx === touchState.current.start.dayIdx) {
+      setRangeEnd({ dayIdx: slot.dayIdx, hour: slot.hour });
+      touchState.current.end = { dayIdx: slot.dayIdx, hour: slot.hour };
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchState.current.selecting) return;
+    setSelecting(false);
+    const { start, end } = touchState.current;
+    setModalSlot(
+      start && end
+        ? { dayIdx: start.dayIdx, start: Math.min(start.hour, end.hour), end: Math.max(start.hour, end.hour) }
+        : null
+    );
+    setTaskLabel("");
+    if (start && end) setModalOpen(true);
+    setRangeStart(null);
+    setRangeEnd(null);
+    touchState.current = { selecting: false, start: null, end: null };
+  };
+
+  // ---
+  // Début sélection souris
   const handleSlotMouseDown = (dayIdx, hour) => {
     setSelecting(true);
     setRangeStart({ dayIdx, hour });
     setRangeEnd({ dayIdx, hour });
   };
-  // Étend la sélection
+  // Étend la sélection souris
   const handleSlotMouseEnter = (dayIdx, hour) => {
     if (selecting && rangeStart && dayIdx === rangeStart.dayIdx) {
       setRangeEnd({ dayIdx, hour });
     }
   };
-  // Fin sélection
+  // Fin sélection souris
   const handleSlotMouseUp = () => {
     setSelecting(false);
-    // Correction : retirer le +1 sur end pour ne pas décaler la sélection
     setModalSlot(
       rangeStart && rangeEnd
         ? { dayIdx: rangeStart.dayIdx, start: Math.min(rangeStart.hour, rangeEnd.hour), end: Math.max(rangeStart.hour, rangeEnd.hour) }
@@ -223,17 +286,20 @@ export default function AbsenceCalendar() {
 
   // Helper pour savoir si une case est sélectionnée
   const isSlotSelected = (dayIdx, hour) => {
-    if (!selecting || !rangeStart || !rangeEnd) return false;
-    if (dayIdx !== rangeStart.dayIdx) return false;
-    const minH = Math.min(rangeStart.hour, rangeEnd.hour);
-    const maxH = Math.max(rangeStart.hour, rangeEnd.hour);
+    if (!(selecting || touchState.current.selecting) || !(rangeStart || touchState.current.start) || !(rangeEnd || touchState.current.end)) return false;
+    const s = selecting ? rangeStart : touchState.current.start;
+    const e = selecting ? rangeEnd : touchState.current.end;
+    if (!s || !e) return false;
+    if (dayIdx !== s.dayIdx) return false;
+    const minH = Math.min(s.hour, e.hour);
+    const maxH = Math.max(s.hour, e.hour);
     return hour >= minH && hour <= maxH;
   };
 
   return (
-    <div className="flex h-full w-full">
+    <div className="flex flex-col lg:flex-row h-full w-full">
       {/* Sidebar calendrier */}
-      <aside className="w-64 bg-white border-r border-secondary flex flex-col items-center py-6">
+      <aside className="w-full lg:w-64 bg-white border-r border-secondary flex flex-col items-center py-6">
         <div className="w-full px-2">
           {/* Sélecteur d'employé pour manager/rh/admin */}
           {user && ["ADMIN", "MANAGER", "RH"].includes(user.role) && (
@@ -260,14 +326,16 @@ export default function AbsenceCalendar() {
             </div>
           )}
           {/* Correction : calendarType="iso8601" fonctionne */}
-          <Calendar
-            locale="fr-FR"
-            value={calendarDate}
-            onChange={setCalendarDate}
-            calendarType="iso8601"
-            className="rounded-xl border-none shadow"
-            tileClassName={({ date }) => isSameDay(date, calendarDate) ? "!bg-primary !text-white rounded-full" : ""}
-          />
+          <div className="w-full">
+            <Calendar
+              locale="fr-FR"
+              value={calendarDate}
+              onChange={setCalendarDate}
+              calendarType="iso8601"
+              className="rounded-xl border-none shadow w-full"
+              tileClassName={({ date }) => isSameDay(date, calendarDate) ? "!bg-primary !text-white rounded-full" : ""}
+            />
+          </div>
         </div>
         <div className="mt-6 w-full px-4">
           <button className="bg-primary text-secondary rounded-xl px-4 py-2 w-full font-semibold mb-2">Aujourd'hui</button>
@@ -280,9 +348,9 @@ export default function AbsenceCalendar() {
       </aside>
 
       {/* Vue planning semaine */}
-      <main className="flex-1 flex flex-col bg-accent">
+      <main className="w-full lg:flex-1 flex flex-col bg-accent mt-6 lg:mt-0" style={{maxWidth: '100vw', overflowX: 'auto'}}>
         {/* En-têtes jours */}
-        <div className="flex border-b border-secondary bg-white">
+        <div className="flex border-b border-secondary bg-white min-w-[700px] md:min-w-[900px] lg:min-w-[1100px]">
           <div className="w-16" />
           {days.map((date, idx) => (
             <div key={idx} className="flex-1 py-3 px-2 text-center font-semibold text-secondary border-l border-secondary">
@@ -291,7 +359,7 @@ export default function AbsenceCalendar() {
           ))}
         </div>
         {/* Grille horaires */}
-        <div className="flex-1 flex overflow-x-auto select-none" onMouseUp={handleSlotMouseUp}>
+        <div className="flex-1 flex overflow-x-auto select-none min-w-[700px] md:min-w-[900px] lg:min-w-[1100px]" onMouseUp={handleSlotMouseUp}>
           {/* Colonne heures */}
           <div className="w-16 flex flex-col">
             {HOURS.map((h) => (
@@ -309,9 +377,15 @@ export default function AbsenceCalendar() {
                 return (
                   <div
                     key={h}
+                    data-day={dayIdx}
+                    data-hour={h}
                     className={`h-16 relative border-b border-accent cursor-pointer group ${selected ? 'bg-primary/20' : ''}`}
                     onMouseDown={() => handleSlotMouseDown(dayIdx, h)}
                     onMouseEnter={() => handleSlotMouseEnter(dayIdx, h)}
+                    onTouchStart={handleTouchStart(dayIdx, h)}
+                    onTouchMove={handleTouchMove}
+                    onTouchEnd={handleTouchEnd}
+                    style={{ touchAction: 'none' }}
                   >
                     {event && (
                       <div className={`absolute inset-1 rounded-lg shadow flex items-center px-2 text-xs font-semibold text-white ${event.color}`}>

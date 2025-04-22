@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { getUserNotifications } from "../../api/notifications";
-import useAuth from "../../hooks/useAuth";
+import { useAuth } from "../../context/AuthProvider";
 import Notifications from "../Dashboard/Notifications";
 import Profile from "../Profile/Profile";
 
 export default function Header() {
   const navigate = useNavigate();
-  const { logout, user, token } = useAuth();
+  const auth = useAuth();
+  const { logout, user, token } = auth;
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifCount, setNotifCount] = useState(0);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -17,6 +18,11 @@ export default function Header() {
   useEffect(() => {
     if (user && token) {
       getUserNotifications(user.id, token).then(data => {
+        console.log('Data dans Header.jsx:', data);
+        if (!Array.isArray(data)) {
+          setNotifCount(0);
+          return;
+        }
         const unread = data.filter(n => !n.lu).length;
         setNotifCount(unread);
       });
@@ -37,12 +43,22 @@ export default function Header() {
       // Recharge les notifications immédiatement
       if (user && token) {
         getUserNotifications(user.id, token).then(data => {
+          console.log('Data dans Header.jsx:', data);
+          if (!Array.isArray(data)) {
+            setNotifCount(0);
+            return;
+          }
           const unread = data.filter(n => !n.lu).length;
           setNotifCount(unread);
         });
         // Re-fetch après 1 seconde
         setTimeout(() => {
           getUserNotifications(user.id, token).then(data => {
+            console.log('Data dans Header.jsx:', data);
+            if (!Array.isArray(data)) {
+              setNotifCount(0);
+              return;
+            }
             const unread = data.filter(n => !n.lu).length;
             setNotifCount(unread);
           });
@@ -50,6 +66,11 @@ export default function Header() {
         // Re-fetch après 5 secondes
         setTimeout(() => {
           getUserNotifications(user.id, token).then(data => {
+            console.log('Data dans Header.jsx:', data);
+            if (!Array.isArray(data)) {
+              setNotifCount(0);
+              return;
+            }
             const unread = data.filter(n => !n.lu).length;
             setNotifCount(unread);
           });
@@ -57,6 +78,11 @@ export default function Header() {
         // Re-fetch après 10 secondes
         setTimeout(() => {
           getUserNotifications(user.id, token).then(data => {
+            console.log('Data dans Header.jsx:', data);
+            if (!Array.isArray(data)) {
+              setNotifCount(0);
+              return;
+            }
             const unread = data.filter(n => !n.lu).length;
             setNotifCount(unread);
           });
@@ -73,6 +99,11 @@ export default function Header() {
     const refresh = () => {
       if (user && token) {
         getUserNotifications(user.id, token).then(data => {
+          console.log('Data dans Header.jsx:', data);
+          if (!Array.isArray(data)) {
+            setNotifCount(0);
+            return;
+          }
           const unread = data.filter(n => !n.lu).length;
           setNotifCount(unread);
         });
