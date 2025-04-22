@@ -8,6 +8,7 @@ import { useAuth } from '../../context/AuthProvider';
 import ConfirmModal from '../ui/ConfirmModal'; // Importez votre composant ConfirmModal
 import TaskList from "./TaskList";
 import { ChevronLeftIcon, ChevronRightIcon, PlusIcon } from '@heroicons/react/24/outline';
+import ReactDOM from "react-dom";
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const DAYS = ["Lun.", "Mar.", "Mer.", "Jeu.", "Ven.", "Sam.", "Dim."];
@@ -180,7 +181,7 @@ export default function AbsenceCalendar() {
         date.setHours(modalSlot.hour, 0, 0, 0);
         dates = [date.toISOString()];
       }
-      await deleteEmployeePlanning(selectedEmployeeId, dates, token);
+      await deleteEmployeePlanning(Number(selectedEmployeeId), dates, token);
       setModalOpen(false);
       setModalDeleteOpen(false);
       const from = format(weekStart, 'yyyy-MM-dd');
@@ -210,9 +211,80 @@ export default function AbsenceCalendar() {
   const [rangeStart, setRangeStart] = useState(null); // { dayIdx, hour }
   const [rangeEnd, setRangeEnd] = useState(null);
 
-  // --- Touch events pour mobile ---
-  const touchState = React.useRef({ selecting: false, start: null, end: null });
+  const touchState = React.useRef({
+    selecting: false,
+    start: null,
+    end: null,
+    dayIdx: null,
+    startX: 0,
+    startY: 0,
+  });
 
+  // Correction : sélection fluide multi-heures sur mobile dès le touchstart
+  const handleTouchStart = (dayIdx, hour) => (e) => {
+    if (e.touches.length > 1) return;
+    const touch = e.touches[0];
+    document.body.style.overflow = 'hidden'; // Désactive le scroll pendant la sélection
+    touchState.current = {
+      selecting: true,
+      start: { dayIdx, hour },
+      end: { dayIdx, hour },
+      dayIdx,
+      startX: touch.clientX,
+      startY: touch.clientY,
+    };
+    setSelecting(true);
+    setRangeStart({ dayIdx, hour });
+    setRangeEnd({ dayIdx, hour });
+  };
+
+  const handleTouchMove = (e) => {
+    if (e.touches.length > 1) return;
+    const touch = e.touches[0];
+    // Correction : toujours trouver la case horaire même si on est sur un enfant
+    let el = document.elementFromPoint(touch.clientX, touch.clientY);
+    while (el && (!el.getAttribute('data-day') || !el.getAttribute('data-hour')) && el.parentElement) {
+      el = el.parentElement;
+    }
+    if (el && el.getAttribute('data-day') && el.getAttribute('data-hour')) {
+      const dayIdx = parseInt(el.getAttribute('data-day'));
+      const hour = parseInt(el.getAttribute('data-hour'));
+      if (touchState.current.selecting && dayIdx === touchState.current.dayIdx) {
+        setRangeEnd({ dayIdx, hour });
+        touchState.current.end = { dayIdx, hour };
+        e.preventDefault(); // Bloque le scroll dès qu'on glisse dans la colonne
+      }
+    }
+  };
+
+  const handleTouchEnd = (e) => {
+    document.body.style.overflow = '';
+    if (touchState.current.selecting && touchState.current.start && touchState.current.end) {
+      setSelecting(false);
+      const { start, end } = touchState.current;
+      if (start.hour === end.hour) {
+        setModalSlot({ dayIdx: start.dayIdx, hour: start.hour });
+      } else {
+        setModalSlot({ dayIdx: start.dayIdx, start: Math.min(start.hour, end.hour), end: Math.max(start.hour, end.hour) });
+      }
+      setTaskLabel("");
+      setTimeout(() => setModalOpen(true), 0);
+    }
+    setSelecting(false);
+    setRangeStart(null);
+    setRangeEnd(null);
+    touchState.current = { selecting: false, start: null, end: null, dayIdx: null, startX: 0, startY: 0 };
+  };
+
+  const handleTouchCancel = (e) => {
+    document.body.style.overflow = '';
+    setSelecting(false);
+    setRangeStart(null);
+    setRangeEnd(null);
+    touchState.current = { selecting: false, start: null, end: null, dayIdx: null, startX: 0, startY: 0 };
+  };
+
+  // Gestion tactile pour mobile
   const getSlotFromTouch = (e) => {
     // Trouve l'élément cible de la touche (div[data-day][data-hour])
     const touch = e.touches[0];
@@ -226,58 +298,19 @@ export default function AbsenceCalendar() {
     return null;
   };
 
-  const handleTouchStart = (dayIdx, hour) => (e) => {
-    e.preventDefault();
-    setSelecting(true);
-    setRangeStart({ dayIdx, hour });
-    setRangeEnd({ dayIdx, hour });
-    touchState.current = { selecting: true, start: { dayIdx, hour }, end: { dayIdx, hour } };
-  };
-
-  const handleTouchMove = (e) => {
-    if (!touchState.current.selecting) return;
-    const slot = getSlotFromTouch(e);
-    if (slot && slot.dayIdx === touchState.current.start.dayIdx) {
-      setRangeEnd({ dayIdx: slot.dayIdx, hour: slot.hour });
-      touchState.current.end = { dayIdx: slot.dayIdx, hour: slot.hour };
-    }
-  };
-
-  const handleTouchEnd = () => {
-    if (!touchState.current.selecting) return;
-    setSelecting(false);
-    const { start, end } = touchState.current;
-    if (start && end) {
-      if (start.hour === end.hour) {
-        setModalSlot({ dayIdx: start.dayIdx, hour: start.hour });
-      } else {
-        setModalSlot({ dayIdx: start.dayIdx, start: Math.min(start.hour, end.hour), end: Math.max(start.hour, end.hour) });
-      }
-      setTaskLabel("");
-      setTimeout(() => setModalOpen(true), 0);
-    } else {
-      setModalSlot(null);
-      setTaskLabel("");
-    }
-    setRangeStart(null);
-    setRangeEnd(null);
-    touchState.current = { selecting: false, start: null, end: null };
-  };
-
-  // ---
-  // Début sélection souris
+  // Correction gestion tactile mobile : empêche le scroll et garantit la sélection
   const handleSlotMouseDown = (dayIdx, hour) => {
     setSelecting(true);
     setRangeStart({ dayIdx, hour });
     setRangeEnd({ dayIdx, hour });
   };
-  // Étend la sélection souris
+
   const handleSlotMouseEnter = (dayIdx, hour) => {
     if (selecting && rangeStart && dayIdx === rangeStart.dayIdx) {
       setRangeEnd({ dayIdx, hour });
     }
   };
-  // Fin sélection souris
+
   const handleSlotMouseUp = () => {
     setSelecting(false);
     if (rangeStart && rangeEnd) {
@@ -303,6 +336,18 @@ export default function AbsenceCalendar() {
     const maxH = Math.max(s.hour, e.hour);
     return hour >= minH && hour <= maxH;
   };
+
+  // 1. Ref pour le conteneur de grille mobile
+  const mobileGridRef = React.useRef(null);
+
+  // 2. useEffect pour attacher le listener touchmove non passif
+  useEffect(() => {
+    const grid = mobileGridRef.current;
+    if (!grid) return;
+    const handleMove = (e) => handleTouchMove(e);
+    grid.addEventListener('touchmove', handleMove, { passive: false });
+    return () => grid.removeEventListener('touchmove', handleMove);
+  }, []);
 
   return (
     <div className="w-full">
@@ -331,7 +376,7 @@ export default function AbsenceCalendar() {
             ))}
           </div>
           {/* Grille planning : une ligne par heure, colonnes jours */}
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto" ref={mobileGridRef}>
             <div className="flex flex-col">
               {HOURS.map((h) => (
                 <div key={h} className="flex border-b border-accent last:border-0 min-h-[36px]">
@@ -343,11 +388,16 @@ export default function AbsenceCalendar() {
                       <div
                         key={dayIdx}
                         className={`flex-1 relative cursor-pointer group min-w-[36px] max-w-[48px] flex items-center justify-center ${selected ? 'bg-primary/20' : 'bg-white'} border-r border-accent last:border-0`}
-                        onClick={() => handleSlotClick(dayIdx, h)}
+                        data-day={dayIdx}
+                        data-hour={h}
                         onTouchStart={handleTouchStart(dayIdx, h)}
-                        onTouchMove={handleTouchMove}
                         onTouchEnd={handleTouchEnd}
-                        style={{ minHeight: 36, touchAction: 'none' }}
+                        onTouchCancel={handleTouchCancel}
+                        onMouseDown={() => handleSlotMouseDown(dayIdx, h)}
+                        onMouseEnter={() => handleSlotMouseEnter(dayIdx, h)}
+                        onMouseUp={handleSlotMouseUp}
+                        onClick={() => handleSlotClick(dayIdx, h)}
+                        style={{ minHeight: 36, userSelect: 'none', WebkitUserSelect: 'none' }}
                       >
                         {event ? (
                           <span className="block w-full h-full rounded-lg bg-primary text-white text-xs font-semibold flex items-center justify-center px-1">
@@ -356,7 +406,7 @@ export default function AbsenceCalendar() {
                         ) : (
                           <button
                             className="opacity-0 group-hover:opacity-100 absolute inset-0 flex items-center justify-center w-full h-full text-primary"
-                            style={{ transition: 'opacity 0.2s' }}
+                            style={{ transition: 'opacity 0.2s', userSelect: 'none', WebkitUserSelect: 'none' }}
                             onClick={e => { e.stopPropagation(); handleSlotClick(dayIdx, h); }}
                             tabIndex={-1}
                           >
@@ -462,10 +512,9 @@ export default function AbsenceCalendar() {
                       className={`h-16 relative border-b border-accent cursor-pointer group ${selected ? 'bg-primary/20' : ''}`}
                       onMouseDown={() => handleSlotMouseDown(dayIdx, h)}
                       onMouseEnter={() => handleSlotMouseEnter(dayIdx, h)}
-                      onTouchStart={handleTouchStart(dayIdx, h)}
-                      onTouchMove={handleTouchMove}
-                      onTouchEnd={handleTouchEnd}
-                      style={{ touchAction: 'none' }}
+                      onMouseUp={handleSlotMouseUp}
+                      onClick={() => handleSlotClick(dayIdx, h)}
+                      style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
                     >
                       {event && (
                         <div className={`absolute inset-1 rounded-lg shadow flex items-center px-2 text-xs font-semibold text-white ${event.color}`}>
@@ -484,9 +533,9 @@ export default function AbsenceCalendar() {
             ))}
           </div>
           {/* Modal d'édition avec bouton supprimer */}
-          {modalOpen && modalSlot && (
-            <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-              <div className="bg-white rounded-xl p-6 w-80 shadow-lg">
+          {modalOpen && modalSlot && ReactDOM.createPortal(
+            <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center" style={{ zIndex: 9999 }}>
+              <div className="bg-white rounded-xl p-6 w-full max-w-xs shadow-lg mx-2">
                 <h3 className="text-lg font-semibold mb-4">Assigner ou supprimer une tâche</h3>
                 {modalSlot.start !== undefined && modalSlot.end !== undefined ? (
                   <div className="mb-2 text-sm">Jour : <b>{DAYS[modalSlot.dayIdx]}</b> de <b>{modalSlot.start}:00</b> à <b>{modalSlot.end}:00</b></div>
@@ -503,7 +552,7 @@ export default function AbsenceCalendar() {
                 />
                 <div className="flex flex-col gap-2 mt-4">
                   <button className="px-4 py-2 rounded bg-gray-200 w-full" onClick={() => setModalOpen(false)}>Annuler</button>
-                  <button className="px-4 py-2 rounded bg-red-500 text-white font-semibold w-full" onClick={handleDeleteTask}>Supprimer</button>
+                  <button className="px-4 py-2 rounded bg-red-500 text-white font-semibold w-full" onClick={handleDeleteTask} onTouchEnd={confirmDeleteTask}>Supprimer</button>
                   {modalSlot.start !== undefined && modalSlot.end !== undefined ? (
                     <button className="px-4 py-2 rounded bg-primary text-white font-semibold w-full" onClick={handleSaveTaskRange} disabled={!taskLabel.trim()}>Enregistrer</button>
                   ) : (
@@ -511,7 +560,8 @@ export default function AbsenceCalendar() {
                   )}
                 </div>
               </div>
-            </div>
+            </div>,
+            document.body
           )}
           {/* Modal de confirmation suppression */}
           <ConfirmModal
