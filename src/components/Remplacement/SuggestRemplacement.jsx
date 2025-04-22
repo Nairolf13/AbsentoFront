@@ -90,7 +90,7 @@ export default function SuggestRemplacement() {
       await proposerRemplacant(selectedAbsence.id, modalPropose.candidat.id);
       setSuccess("Remplaçant proposé avec succès !");
       setTimeout(() => {
-        setSelectedAbsence(null); 
+        navigate("/dashboard/remplacement");
         setSuccess("");
       }, 1200);
     } catch (e) {
