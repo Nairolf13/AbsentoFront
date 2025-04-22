@@ -418,11 +418,11 @@ export default function AbsenceCalendar() {
               ))}
             </div>
           </div>
-        </div>
-        {/* Bloc tâches sous le planning */}
-        <div className="bg-white rounded-2xl shadow p-4 mt-4">
-          <h4 className="text-lg font-semibold text-primary mb-2">Mes tâches</h4>
-          <TaskList />
+          {/* Bloc tâches sous le planning */}
+          <div className="hidden lg:block bg-white rounded-2xl shadow p-4 mt-4">
+            <h4 className="text-lg font-semibold text-primary mb-2">Mes tâches</h4>
+            <TaskList />
+          </div>
         </div>
       </div>
       {/* Desktop : affichage classique en flex-row */}

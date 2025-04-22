@@ -16,6 +16,7 @@ import Profile from "./components/Profile/Profile";
 import Calendar from "./components/Dashboard/Calendar";
 import HistoriqueAbsences from "./components/Dashboard/HistoriqueAbsences";
 import EmployeeDashboardTab from "./components/Employee/EmployeeDashboardTab";
+import MesTaches from "./pages/MesTaches";
 
 function AppContent() {
   const { pathname } = useLocation();
@@ -33,6 +34,7 @@ function AppContent() {
           {/* Redirection automatique de /dashboard vers /dashboard/calendar */}
           <Route index element={<Navigate to="/dashboard/calendar" replace />} />
           <Route path="calendar" element={<Calendar />} />
+          <Route path="taches" element={<MesTaches />} />
           <Route path="absence" element={<RequestAbsenceForm />} />
           <Route path="remplacement" element={<RemplacementSuggestPage />} />
           <Route path="historique" element={<HistoriqueAbsences />} />
