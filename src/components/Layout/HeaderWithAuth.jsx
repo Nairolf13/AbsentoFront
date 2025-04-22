@@ -1,9 +1,10 @@
 import React from "react";
-import useAuth from "../../hooks/useAuth";
+import { useAuth } from "../../context/AuthProvider";
 import Header from "./Header";
 
 export default function HeaderWithAuth() {
-  const { token } = useAuth();
+  const auth = useAuth();
+  const { token } = auth;
   if (!token) return null;
   return <Header />;
 }

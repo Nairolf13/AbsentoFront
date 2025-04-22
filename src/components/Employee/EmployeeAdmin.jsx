@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import Papa from "papaparse";
-import useAuth from "../../hooks/useAuth";
+import { useAuth } from "../../context/AuthProvider";
 import { useNavigate } from "react-router-dom";
 import ConfirmModal from "../ui/ConfirmModal";
 import "../ui/animations.css";
+import { fetchEmployees as fetchEmployeesApi } from '../../api/employees';
 
 export default function EmployeeAdmin() {
   const { user, token } = useAuth();
@@ -36,16 +37,11 @@ export default function EmployeeAdmin() {
 
   const navigate = useNavigate();
 
-  // --- Ajout : fonction pour rafraîchir la liste des employés ---
   const fetchEmployees = async () => {
     setLoadingEmployees(true);
     setErrorEmployees("");
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/utilisateur/entreprise/employes`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (!res.ok) throw new Error('Erreur lors de la récupération des employés');
-      const data = await res.json();
+      const data = await fetchEmployeesApi(token);
       setEmployees(data);
     } catch (e) {
       setErrorEmployees("Erreur lors de la récupération des employés.");

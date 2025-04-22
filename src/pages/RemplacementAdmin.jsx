@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
-import useAuth from "../hooks/useAuth";
+import { useAuth } from "../context/AuthProvider";
 import { getAbsencesSansRemplacant } from "../api/absento";
 import { useNavigate } from "react-router-dom";
 
 export default function RemplacementAdmin() {
-  const { token } = useAuth();
+  const auth = useAuth();
+  const { token } = auth;
   const [absences, setAbsences] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import useAuth from "../../hooks/useAuth";
+import { useAuth } from "../../context/AuthProvider";
 import { requestAbsence } from "../../api/absento";
 import { useNavigate } from "react-router-dom";
 
@@ -39,17 +39,19 @@ export default function RequestAbsenceForm() {
       <div className="bg-white rounded-2xl shadow-lg px-8 py-10 w-full max-w-md mx-auto flex flex-col items-center">
         <h3 className="font-semibold text-2xl mb-6 text-primary text-center">Déclarer une absence</h3>
         <form onSubmit={handleSubmit} className="space-y-4 w-full flex flex-col items-center">
-          <div className="w-full">
-            <label className="block mb-1 text-secondary text-center">Date de début</label>
-            <input type="date" className="block w-full rounded-xl border border-primary px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-700" value={dateDebut} onChange={e => setDateDebut(e.target.value)} required />
-            <label className="block mt-1 mb-1 text-secondary text-center">Heure de début</label>
-            <input type="time" className="block w-full rounded-xl border border-primary px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-700" value={heureDebut} onChange={e => setHeureDebut(e.target.value)} required />
-          </div>
-          <div className="w-full">
-            <label className="block mb-1 text-secondary text-center">Date de fin</label>
-            <input type="date" className="block w-full rounded-xl border border-primary px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-700" value={dateFin} onChange={e => setDateFin(e.target.value)} required />
-            <label className="block mt-1 mb-1 text-secondary text-center">Heure de fin</label>
-            <input type="time" className="block w-full rounded-xl border border-primary px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-700" value={heureFin} onChange={e => setHeureFin(e.target.value)} required />
+          <div className="flex flex-col md:flex-row gap-4 w-full">
+            <div className="w-full md:w-1/2">
+              <label className="block mb-1 text-secondary text-center">Date de début</label>
+              <input type="date" className="block w-full rounded-xl border border-primary px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-700" value={dateDebut} onChange={e => setDateDebut(e.target.value)} required />
+              <label className="block mt-1 mb-1 text-secondary text-center">Heure de début</label>
+              <input type="time" className="block w-full rounded-xl border border-primary px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-700" value={heureDebut} onChange={e => setHeureDebut(e.target.value)} required />
+            </div>
+            <div className="w-full md:w-1/2">
+              <label className="block mb-1 text-secondary text-center">Date de fin</label>
+              <input type="date" className="block w-full rounded-xl border border-primary px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-700" value={dateFin} onChange={e => setDateFin(e.target.value)} required />
+              <label className="block mt-1 mb-1 text-secondary text-center">Heure de fin</label>
+              <input type="time" className="block w-full rounded-xl border border-primary px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-700" value={heureFin} onChange={e => setHeureFin(e.target.value)} required />
+            </div>
           </div>
           <div className="w-full">
             <label className="block mb-1 text-secondary text-center">Type</label>

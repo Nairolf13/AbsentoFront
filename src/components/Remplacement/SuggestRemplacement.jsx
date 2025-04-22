@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { getRemplacantsPossibles, proposerRemplacant } from "../../api/remplacement";
 import { getAbsencesSansRemplacant } from "../../api/absento";
-import useAuth from "../../hooks/useAuth";
+import { useAuth } from "../../context/AuthProvider";
 import { useLocation, useNavigate } from "react-router-dom";
 import ConfirmModal from "../ui/ConfirmModal";
 import "../ui/animations.css";

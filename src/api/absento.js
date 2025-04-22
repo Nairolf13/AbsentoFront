@@ -1,9 +1,12 @@
 import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL;
+import { API_URL } from './config';
 
 export const login = async (email, password) => {
-  const { data } = await axios.post(`${API_URL}/auth/login`, { email, password });
+  // Sécurisation : trim email et password pour éviter les espaces involontaires
+  const { data } = await axios.post(`${API_URL}/auth/login`, {
+    email: email.trim(),
+    password: password.trim()
+  });
   return data;
 };
 
@@ -102,6 +105,14 @@ export const getAbsencesSansRemplacant = async (token) => {
 export const getAllAbsences = async (token) => {
   const { data } = await axios.get(`${API_URL}/absences/toutes`, {
     headers: { Authorization: `Bearer ${token}` },
+  });
+  return data;
+};
+
+// Ajoute une fonction pour récupérer le profil utilisateur complet
+export const getUserProfile = async (userId, token) => {
+  const { data } = await axios.get(`${API_URL}/utilisateur/${userId}`, {
+    headers: { Authorization: `Bearer ${token}` }
   });
   return data;
 };
