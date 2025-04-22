@@ -137,7 +137,7 @@ export default function SuggestRemplacement() {
   return (
     <div className="min-h-screen flex flex-col items-center bg-accent py-12">
       <div className="bg-white rounded-2xl shadow-lg px-8 py-10 w-full max-w-2xl mx-auto">
-        <button className="mb-4 text-primary underline" onClick={() => setSelectedAbsence(null)}>
+        <button className="mb-4 text-primary underline" onClick={() => navigate("/dashboard/remplacement")}> 
           ← Retour à la liste des absences
         </button>
         <h2 className="text-2xl font-bold mb-6 text-primary text-center">

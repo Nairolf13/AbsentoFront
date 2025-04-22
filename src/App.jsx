@@ -37,7 +37,7 @@ function AppContent() {
           <Route path="calendar" element={<Calendar />} />
           <Route path="taches" element={<MesTaches />} />
           <Route path="absence" element={<RequestAbsenceForm />} />
-          <Route path="remplacement" element={<RemplacementSuggestPage />} />
+          <Route path="remplacement" element={<RemplacementAdmin />} />
           <Route path="historique" element={<HistoriqueAbsences />} />
           <Route path="employes" element={<EmployeeDashboardTab />} />
         </Route>

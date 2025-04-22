@@ -48,7 +48,7 @@ export default function Dashboard() {
     calendar: '',
     taches: 'taches',
     absence: 'absence',
-    remplacement: '', 
+    remplacement: 'remplacement', 
     historique: 'historique',
     employes: 'employes',
   };
@@ -168,11 +168,7 @@ export default function Dashboard() {
         {/* Affichage dynamique centralisé selon l'onglet actif */}
         <div className="flex-1 flex flex-col min-h-0">
           {user ? (
-            activeTab === "remplacement" && (user.role === "ADMIN" || user.role === "MANAGER")
-              ? <RemplacementAdminTab />
-              : activeTab === "remplacement"
-                ? <RemplacementSuggestPage />
-                : <Outlet />
+            <Outlet />
           ) : (
             <div className="flex items-center justify-center h-full w-full text-lg text-secondary">
               Chargement du tableau de bord…
@@ -230,11 +226,7 @@ export default function Dashboard() {
           <div className="flex flex-col lg:flex-row flex-1 gap-6 px-4 md:px-10 pb-10 min-h-0">
             <section className="flex-1 bg-white rounded-2xl shadow p-6 overflow-y-auto flex flex-col min-h-0">
               {user ? (
-                activeTab === "remplacement" && (user.role === "ADMIN" || user.role === "MANAGER")
-                  ? <RemplacementAdminTab />
-                  : activeTab === "remplacement"
-                    ? <RemplacementSuggestPage />
-                    : <Outlet />
+                <Outlet />
               ) : (
                 <div className="flex items-center justify-center h-full w-full text-lg text-secondary">
                   Chargement du tableau de bord…
