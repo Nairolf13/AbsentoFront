@@ -4,12 +4,12 @@ import { useAuth } from "../../context/AuthProvider";
 import { getUserNotifications, deleteNotification, markNotificationAsRead } from "../../api/notifications";
 
 export default function Notifications({ onCountChange }) {
-  const { user, token } = useAuth();
+  const { user } = useAuth();
   const [notifications, setNotifications] = useState([]);
 
   useEffect(() => {
-    if (user && token) {
-      getUserNotifications(user.id, token).then(data => {
+    if (user) {
+      getUserNotifications(user.id).then(data => {
         const sorted = data.sort((a, b) => new Date(b.date) - new Date(a.date));
         setNotifications(sorted);
         const unread = sorted.filter(n => !n.lu).length;
@@ -17,7 +17,7 @@ export default function Notifications({ onCountChange }) {
         window.dispatchEvent(new CustomEvent("notifCount", { detail: unread }));
       });
     }
-  }, [user, token, onCountChange]);
+  }, [user, onCountChange]);
 
   useSocket((event, payload) => {
     if (event === "notification") {
@@ -38,7 +38,7 @@ export default function Notifications({ onCountChange }) {
 
   const handleDelete = async (id) => {
     try {
-      await deleteNotification(id, token);
+      await deleteNotification(id);
       setNotifications(n => {
         const filtered = n.filter(notif => notif.id !== id);
         return filtered;
@@ -50,7 +50,7 @@ export default function Notifications({ onCountChange }) {
 
   const handleMarkAsRead = async (id) => {
     try {
-      await markNotificationAsRead(id, token);
+      await markNotificationAsRead(id);
       setNotifications(n => n.map(notif => notif.id === id ? { ...notif, lu: true } : notif));
     } catch (err) {
       alert("Erreur lors du passage en lu");

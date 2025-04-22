@@ -1,24 +1,23 @@
 import axios from 'axios';
 import { API_URL } from './config';
 
-export async function getUserNotifications(userId, token) {
+export async function getUserNotifications(userId) {
   const res = await axios.get(`${API_URL}/admin/notifications/${userId}`, {
-    headers: { Authorization: `Bearer ${token}` }
+    withCredentials: true
   });
   // Sécurisation : retourne un tableau vide si la réponse n'est pas un tableau
   const data = res.data;
-  console.log('Réponse notifications:', data); // DEBUG
   return Array.isArray(data) ? data : [];
 }
 
-export async function deleteNotification(id, token) {
+export async function deleteNotification(id) {
   await axios.delete(`${API_URL}/admin/notifications/${id}`, {
-    headers: { Authorization: `Bearer ${token}` }
+    withCredentials: true
   });
 }
 
-export async function markNotificationAsRead(id, token) {
+export async function markNotificationAsRead(id) {
   await axios.patch(`${API_URL}/admin/notifications/${id}/read`, {}, {
-    headers: { Authorization: `Bearer ${token}` }
+    withCredentials: true
   });
 }

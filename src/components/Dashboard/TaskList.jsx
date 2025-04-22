@@ -9,7 +9,7 @@ import { fetchEmployees } from '../../api/employees';
 import useSocket from "../../hooks/useSocket";
 
 export default function TaskList() {
-  const { user, token } = useAuth();
+  const { user } = useAuth();
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -25,7 +25,7 @@ export default function TaskList() {
   useSocket((event, payload) => {
     if (event === "notification" && payload && payload.message && payload.message.includes("tâche")) {
       fetch(`${API_URL}/tasks`, {
-        headers: { Authorization: `Bearer ${token}` },
+        credentials: 'include',
       })
         .then((res) => res.json())
         .then((data) => {
@@ -34,7 +34,7 @@ export default function TaskList() {
       // Rafraîchir les tâches assignées si manager
       if (isManager) {
         fetch(`${API_URL}/tasks/assigned-by-me`, {
-          headers: { Authorization: `Bearer ${token}` },
+          credentials: 'include',
         })
           .then((res) => res.json())
           .then((data) => setAssignedTasks(Array.isArray(data) ? data : []));
@@ -43,10 +43,10 @@ export default function TaskList() {
   });
 
   useEffect(() => {
-    if (!token) return;
+    if (!user) return;
     setLoading(true);
     fetch(`${API_URL}/tasks`, {
-      headers: { Authorization: `Bearer ${token}` },
+      credentials: 'include',
     })
       .then((res) => res.json())
       .then((data) => {
@@ -58,22 +58,21 @@ export default function TaskList() {
         setLoading(false);
       });
     if (isManager) {
-      fetchEmployees(token).then(setEmployees).catch(() => setEmployees([]));
-      // Récupérer les tâches assignées par moi
+      fetchEmployees().then(setEmployees).catch(() => setEmployees([]));
       fetch(`${API_URL}/tasks/assigned-by-me`, {
-        headers: { Authorization: `Bearer ${token}` },
+        credentials: 'include',
       })
         .then((res) => res.json())
         .then((data) => setAssignedTasks(Array.isArray(data) ? data : []));
     }
-  }, [token, isManager]);
+  }, [user]);
 
   const handleDelete = (task) => setModalDelete({ open: true, task });
   const confirmDelete = async () => {
     if (!modalDelete.task) return;
     const res = await fetch(`${API_URL}/tasks/${modalDelete.task.id}`, {
       method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
+      credentials: 'include',
     });
     if (res.ok) setTasks((ts) => ts.filter((t) => t.id !== modalDelete.task.id));
     setModalDelete({ open: false, task: null });
@@ -88,8 +87,8 @@ export default function TaskList() {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
       },
+      credentials: 'include',
       body: JSON.stringify({ title: editValue }),
     });
     if (res.ok) {
@@ -104,8 +103,8 @@ export default function TaskList() {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
       },
+      credentials: 'include',
       body: JSON.stringify({ completed: !completed }),
     });
     if (res.ok) {
@@ -220,8 +219,8 @@ export default function TaskList() {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
             },
+            credentials: 'include',
             body: JSON.stringify(body),
           });
           if (res.ok) {
@@ -230,7 +229,7 @@ export default function TaskList() {
             if (isManager && userId && userId !== user.id) {
               // Refresh assigned tasks
               fetch(`${API_URL}/tasks/assigned-by-me`, {
-                headers: { Authorization: `Bearer ${token}` },
+                credentials: 'include',
               })
                 .then((res) => res.json())
                 .then((data) => setAssignedTasks(Array.isArray(data) ? data : []));

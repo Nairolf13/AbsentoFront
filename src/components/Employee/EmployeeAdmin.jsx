@@ -7,7 +7,7 @@ import "../ui/animations.css";
 import { fetchEmployees as fetchEmployeesApi } from '../../api/employees';
 
 export default function EmployeeAdmin() {
-  const { user, token } = useAuth();
+  const { user } = useAuth();
   const [csvError, setCsvError] = useState("");
   const [csvSuccess, setCsvSuccess] = useState("");
   const [csvLoading, setCsvLoading] = useState(false);
@@ -41,7 +41,7 @@ export default function EmployeeAdmin() {
     setLoadingEmployees(true);
     setErrorEmployees("");
     try {
-      const data = await fetchEmployeesApi(token);
+      const data = await fetchEmployeesApi();
       setEmployees(data);
     } catch (e) {
       setErrorEmployees("Erreur lors de la récupération des employés.");
@@ -51,8 +51,8 @@ export default function EmployeeAdmin() {
   };
 
   useEffect(() => {
-    if (token) fetchEmployees();
-  }, [token]);
+    if (user) fetchEmployees();
+  }, [user]);
 
   const handleCsvDrop = (e) => {
     e.preventDefault();
@@ -112,7 +112,6 @@ export default function EmployeeAdmin() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify(validRows)
       });
@@ -147,7 +146,6 @@ export default function EmployeeAdmin() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify([singleForm])
       });
@@ -179,7 +177,6 @@ export default function EmployeeAdmin() {
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/utilisateur/${modalDelete.emp.id}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
         setEmployees((emps) => emps.filter((e) => e.id !== modalDelete.emp.id));
@@ -412,8 +409,6 @@ export default function EmployeeAdmin() {
                   console.log("[MODIF] Champs envoyés:", Object.keys(toSend));
                   const res = await fetch(`${import.meta.env.VITE_API_URL}/utilisateur/${parseInt(editEmp.id)}`, {
                     method: "PUT",
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify(toSend)
                   });
                   if (!res.ok) throw new Error("Erreur lors de la modification");
                   const updated = await res.json();

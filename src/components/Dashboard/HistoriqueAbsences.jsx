@@ -21,7 +21,7 @@ export default function HistoriqueAbsences() {
     window.scrollTo(0, 0);
   }, []);
 
-  const { token, user } = useAuth();
+  const { user } = useAuth();
   const [absences, setAbsences] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -31,21 +31,22 @@ export default function HistoriqueAbsences() {
   const [employees, setEmployees] = useState([]);
 
   useEffect(() => {
-    if (!token) return;
+    if (!user) return;
     setLoading(true);
+    setError(null);
     const privilegedRoles = ["ADMIN", "RH", "MANAGER"];
     const fetchAbsences = privilegedRoles.includes(user?.role)
       ? getAllAbsences
       : getMyAbsences;
-    fetchAbsences(token)
+    fetchAbsences()
       .then(setAbsences)
-      .catch(setError)
+      .catch((e) => setError(e?.response?.data?.error || e.message))
       .finally(() => setLoading(false));
-  }, [token, user]);
+  }, [user]);
 
   const handleValidate = async (id) => {
     try {
-      const { absence } = await validateAbsence(id, token);
+      const { absence } = await validateAbsence(id);
       setAbsences(absences => absences.map(a => a.id === id ? { ...a, status: absence.status } : a));
     } catch (e) {
       alert("Erreur lors de la validation : " + (e?.response?.data?.error || e.message));
@@ -56,7 +57,7 @@ export default function HistoriqueAbsences() {
     setSelectedAbsence(absence);
     setRemplacantId("");
     try {
-      const emps = await fetchEmployees(token);
+      const emps = await fetchEmployees();
       setEmployees(emps);
     } catch (e) {
       setEmployees([]);
@@ -67,7 +68,7 @@ export default function HistoriqueAbsences() {
     if (!remplacantId) return;
     setActionLoading(true);
     try {
-      const updated = await proposerRemplacant(selectedAbsence.id, remplacantId, token);
+      const updated = await proposerRemplacant(selectedAbsence.id, remplacantId);
       setAbsences(absences => absences.map(a =>
         a.id === selectedAbsence.id
           ? { ...a, remplacement: { ...a.remplacement, remplacant: employees.find(e => e.id === Number(remplacantId)) } }

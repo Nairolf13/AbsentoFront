@@ -20,7 +20,7 @@ export default function AbsenceCalendar() {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState(null);
   const [loadingEmployees, setLoadingEmployees] = useState(false);
   const [search, setSearch] = useState("");
-  const { user, token } = useAuth();
+  const { user } = useAuth();
 
   const [modalOpen, setModalOpen] = useState(false);
   const [modalSlot, setModalSlot] = useState(null); 
@@ -29,14 +29,14 @@ export default function AbsenceCalendar() {
   useEffect(() => {
     if (user && ["ADMIN", "MANAGER", "RH"].includes(user.role)) {
       setLoadingEmployees(true);
-      fetchEmployees(token)
+      fetchEmployees()
         .then((emps) => {
           setEmployees(emps);
           setLoadingEmployees(false);
         })
         .catch(() => setLoadingEmployees(false));
     }
-  }, [user, token]);
+  }, [user]);
 
   useEffect(() => {
     if (user && !selectedEmployeeId) setSelectedEmployeeId(user.id);
@@ -65,7 +65,7 @@ export default function AbsenceCalendar() {
       try {
         const from = format(weekStart, 'yyyy-MM-dd');
         const to = format(addDays(weekStart, 6), 'yyyy-MM-dd');
-        const planning = await fetchEmployeePlanning(selectedEmployeeId, from, to, token);
+        const planning = await fetchEmployeePlanning(selectedEmployeeId, from, to);
         setEvents(
           planning
             .filter(ev => ev.label && ev.label.trim() !== "")
@@ -86,7 +86,7 @@ export default function AbsenceCalendar() {
       setLoadingPlanning(false);
     }
     loadPlanning();
-  }, [selectedEmployeeId, weekStart, token]);
+  }, [selectedEmployeeId, weekStart]);
 
   const handleSaveTask = async () => {
     if (modalSlot && taskLabel.trim()) {
@@ -94,11 +94,11 @@ export default function AbsenceCalendar() {
       date.setHours(modalSlot.hour, 0, 0, 0);
       await setEmployeePlanning([
         { employeeId: selectedEmployeeId, date: date.toISOString(), label: taskLabel, moment: date.getHours() < 12 ? 'AM' : 'PM' }
-      ], token);
+      ]);
       setModalOpen(false);
       const from = format(weekStart, 'yyyy-MM-dd');
       const to = format(addDays(weekStart, 6), 'yyyy-MM-dd');
-      const planning = await fetchEmployeePlanning(selectedEmployeeId, from, to, token);
+      const planning = await fetchEmployeePlanning(selectedEmployeeId, from, to);
       setEvents(
         planning
           .filter(ev => ev.label && ev.label.trim() !== "")
@@ -124,11 +124,11 @@ export default function AbsenceCalendar() {
         date.setHours(h, 0, 0, 0);
         slots.push({ employeeId: selectedEmployeeId, date: date.toISOString(), label: taskLabel, moment: h < 12 ? 'AM' : 'PM' });
       }
-      await setEmployeePlanning(slots, token);
+      await setEmployeePlanning(slots);
       setModalOpen(false);
       const from = format(weekStart, 'yyyy-MM-dd');
       const to = format(addDays(weekStart, 6), 'yyyy-MM-dd');
-      const planning = await fetchEmployeePlanning(selectedEmployeeId, from, to, token);
+      const planning = await fetchEmployeePlanning(selectedEmployeeId, from, to);
       setEvents(
         planning
           .filter(ev => ev.label && ev.label.trim() !== "")
@@ -166,12 +166,12 @@ export default function AbsenceCalendar() {
         date.setHours(modalSlot.hour, 0, 0, 0);
         dates = [date.toISOString()];
       }
-      await deleteEmployeePlanning(Number(selectedEmployeeId), dates, token);
+      await deleteEmployeePlanning(Number(selectedEmployeeId), dates);
       setModalOpen(false);
       setModalDeleteOpen(false);
       const from = format(weekStart, 'yyyy-MM-dd');
       const to = format(addDays(weekStart, 6), 'yyyy-MM-dd');
-      const planning = await fetchEmployeePlanning(selectedEmployeeId, from, to, token);
+      const planning = await fetchEmployeePlanning(selectedEmployeeId, from, to);
       setEvents(
         planning
           .filter(ev => ev.label && ev.label.trim() !== "")

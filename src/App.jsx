@@ -20,7 +20,8 @@ import MesTaches from "./pages/MesTaches";
 
 function AppContent() {
   const { pathname } = useLocation();
-  const { token } = useAuth();  const showHeader = token && !["/", "/login", "/register"].includes(pathname);
+  const { user } = useAuth();
+  const showHeader = user && !["/", "/login", "/register"].includes(pathname);
   return (
     <div className="min-h-screen bg-accent">
       {showHeader && <HeaderWithAuth />}

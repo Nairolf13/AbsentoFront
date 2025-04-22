@@ -3,6 +3,7 @@ import Calendar from "./Calendar";
 import HistoriqueAbsences from "./HistoriqueAbsences";
 import RequestAbsenceForm from "../Absence/RequestAbsenceForm";
 import RemplacementSuggestPage from "../../pages/RemplacementSuggest";
+import RemplacementAdminTab from "./RemplacementAdminTab"; // Correction du chemin
 import EmployeeDashboardTab from "../Employee/EmployeeDashboardTab";
 import TaskList from "./TaskList";
 import { useNavigate, useLocation, useParams, Outlet } from "react-router-dom";
@@ -47,7 +48,7 @@ export default function Dashboard() {
     calendar: '',
     taches: 'taches',
     absence: 'absence',
-    remplacement: 'remplacement',
+    remplacement: '', 
     historique: 'historique',
     employes: 'employes',
   };
@@ -90,10 +91,11 @@ export default function Dashboard() {
     { key: "calendar", label: "Calendrier", icon: icons.calendar },
     { key: "taches", label: "Mes tâches", icon: icons.tasks },
     { key: "absence", label: "Absence", icon: icons.absence },
-    { key: "remplacement", label: "Remplacement", icon: icons.remplacement },
+    // Onglet Remplacement visible uniquement pour ADMIN ou MANAGER
+    ...(user && (user.role === "ADMIN" || user.role === "MANAGER") ? [{ key: "remplacement", label: "Remplacement", icon: icons.remplacement }] : []),
     { key: "historique", label: "Historique", icon: icons.history },
   ];
-  if (user?.role === "ADMIN") {
+  if (user && user.role === "ADMIN") {
     sidebarItems.push({ key: "employes", label: "Employés", icon: icons.users });
   }
 
@@ -133,10 +135,9 @@ export default function Dashboard() {
                 <button
                   key={item.key}
                   className={`flex items-center gap-3 text-lg font-semibold rounded-xl px-4 py-3 mb-2 transition focus:outline-none w-full ${activeTab === item.key ? "bg-primary text-secondary" : "text-primary hover:bg-primary/10"}`}
-                  onClick={() => { 
-                    navigate(`/dashboard/${tabToRoute[item.key]}`);
+                  onClick={() => {
+                    handleSidebarClick(item.key);
                     setBurgerOpen(false);
-                    window.dispatchEvent(new CustomEvent("refreshNotifications"));
                   }}
                 >
                   <span>{item.icon}</span>
@@ -164,9 +165,19 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Affichage dynamique via Outlet (comme sur desktop) */}
+        {/* Affichage dynamique centralisé selon l'onglet actif */}
         <div className="flex-1 flex flex-col min-h-0">
-          <Outlet />
+          {user ? (
+            activeTab === "remplacement" && (user.role === "ADMIN" || user.role === "MANAGER")
+              ? <RemplacementAdminTab />
+              : activeTab === "remplacement"
+                ? <RemplacementSuggestPage />
+                : <Outlet />
+          ) : (
+            <div className="flex items-center justify-center h-full w-full text-lg text-secondary">
+              Chargement du tableau de bord…
+            </div>
+          )}
         </div>
 
       </div>
@@ -219,7 +230,11 @@ export default function Dashboard() {
           <div className="flex flex-col lg:flex-row flex-1 gap-6 px-4 md:px-10 pb-10 min-h-0">
             <section className="flex-1 bg-white rounded-2xl shadow p-6 overflow-y-auto flex flex-col min-h-0">
               {user ? (
-                <Outlet />
+                activeTab === "remplacement" && (user.role === "ADMIN" || user.role === "MANAGER")
+                  ? <RemplacementAdminTab />
+                  : activeTab === "remplacement"
+                    ? <RemplacementSuggestPage />
+                    : <Outlet />
               ) : (
                 <div className="flex items-center justify-center h-full w-full text-lg text-secondary">
                   Chargement du tableau de bord…

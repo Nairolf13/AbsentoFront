@@ -1,56 +1,67 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { login, getUserProfile } from "../api/absento";
-import { decodeJWT } from "../utils/jwt";
+import { login, getUserProfile, logout as logoutApi } from "../api/absento";
 
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-  const [token, setToken] = useState(() => localStorage.getItem("token"));
-  const [user, setUser] = useState(() => {
-    const t = localStorage.getItem("token");
-    if (!t) return null;
-    const decoded = decodeJWT(t);
-    return decoded ? { id: decoded.id, role: decoded.role } : null;
-  });
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [authError, setAuthError] = useState(null);
+  const [token, setToken] = useState(() => localStorage.getItem("token") || null);
 
-  // Synchronise token/user avec localStorage à chaque changement
+  // Vérifie l'authentification à l'initialisation
   useEffect(() => {
-    // LOG: Affiche la valeur du token à chaque changement
-    console.log('[AuthProvider] Token (localStorage):', localStorage.getItem('token'));
-    console.log('[AuthProvider] Token (state):', token);
-    if (token) {
-      localStorage.setItem("token", token);
-      const decoded = decodeJWT(token);
-      if (decoded) {
-        // Appelle l’API pour avoir le profil complet
-        getUserProfile(decoded.id, token)
-          .then(profile => setUser(profile))
-          .catch(err => {
-            console.error('Erreur lors du chargement du profil utilisateur:', err);
-            setUser({ id: decoded.id, role: decoded.role }); // fallback minimal
-          });
-      } else {
+    async function fetchProfile() {
+      try {
+        setLoading(true);
+        setAuthError(null);
+        const profile = await getUserProfile();
+        setUser(profile);
+        // Essaie de récupérer le token du localStorage si présent
+        const storedToken = localStorage.getItem("token");
+        if (storedToken) setToken(storedToken);
+      } catch (err) {
         setUser(null);
+        setAuthError(null); 
+        setToken(null);
+      } finally {
+        setLoading(false);
       }
-    } else {
-      localStorage.removeItem("token");
-      setUser(null);
     }
-  }, [token]);
+    fetchProfile();
+  }, []);
 
   const loginUser = async (email, password) => {
-    const res = await login(email, password);
-    setToken(res.token);
-    return decodeJWT(res.token);
+    // login doit renvoyer le token JWT
+    const loginResp = await login(email, password); 
+    // Stocke le token côté frontend
+    if (loginResp && loginResp.token) {
+      localStorage.setItem("token", loginResp.token);
+      setToken(loginResp.token);
+    }
+    const profile = await getUserProfile();
+    setUser(profile);
+    setAuthError(null);
+    return profile;
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await logoutApi();
+    setUser(null);
+    setAuthError(null);
     setToken(null);
+    localStorage.removeItem("token");
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loginUser, logout }}>
-      {children}
+    <AuthContext.Provider value={{ user, token, loading, loginUser, logout, authError }}>
+      {loading ? (
+        <div className="w-full h-screen flex items-center justify-center text-lg text-primary">
+          Chargement de l'authentification...
+        </div>
+      ) : (
+        children
+      )}
     </AuthContext.Provider>
   );
 }
