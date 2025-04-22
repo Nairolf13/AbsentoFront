@@ -382,6 +382,7 @@ export default function AbsenceCalendar() {
                   {days.map((date, dayIdx) => {
                     const event = events.find(ev => ev.day === dayIdx && ev.hour === h);
                     const selected = isSlotSelected(dayIdx, h);
+                    const isAbsence = event && ["MALADIE", "CONGE", "RTT", "AUTRE"].includes(event.label);
                     return (
                       <div
                         key={dayIdx}
@@ -398,9 +399,15 @@ export default function AbsenceCalendar() {
                         style={{ minHeight: 36, userSelect: 'none', WebkitUserSelect: 'none' }}
                       >
                         {event ? (
-                          <span className="block w-full h-full rounded-lg bg-primary text-white text-xs font-semibold flex items-center justify-center px-1">
-                            {event.label}
-                          </span>
+                          isAbsence ? (
+                            <span className="block w-full h-full rounded-lg bg-red-400 text-white text-xs font-bold flex items-center justify-center px-1">
+                              {event.label}
+                            </span>
+                          ) : (
+                            <span className="block w-full h-full rounded-lg bg-primary text-white text-xs font-semibold flex items-center justify-center px-1">
+                              {event.label}
+                            </span>
+                          )
                         ) : (
                           <button
                             className="opacity-0 group-hover:opacity-100 absolute inset-0 flex items-center justify-center w-full h-full text-primary"
@@ -502,6 +509,7 @@ export default function AbsenceCalendar() {
                 {HOURS.map((h) => {
                   const event = events.find(ev => ev.day === dayIdx && ev.hour === h);
                   const selected = isSlotSelected(dayIdx, h);
+                  const isAbsence = event && ["MALADIE", "CONGE", "RTT", "AUTRE"].includes(event.label);
                   return (
                     <div
                       key={h}
@@ -514,12 +522,17 @@ export default function AbsenceCalendar() {
                       onClick={() => handleSlotClick(dayIdx, h)}
                       style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
                     >
-                      {event && (
-                        <div className={`absolute inset-1 rounded-lg shadow flex items-center px-2 text-xs font-semibold text-white ${event.color}`}>
-                          {event.label}
-                        </div>
-                      )}
-                      {!event && (
+                      {event ? (
+                        isAbsence ? (
+                          <div className={`absolute inset-1 rounded-lg shadow flex items-center px-2 text-xs font-bold text-white ${"bg-red-400"}`}>
+                            {event.label}
+                          </div>
+                        ) : (
+                          <div className={`absolute inset-1 rounded-lg shadow flex items-center px-2 text-xs font-semibold text-white ${event.color}`}>
+                            {event.label}
+                          </div>
+                        )
+                      ) : (
                         <div className="absolute inset-1 flex items-center justify-center text-xs text-gray-300 opacity-0 group-hover:opacity-100 transition pointer-events-none select-none">
                           + Ajouter tâche
                         </div>
