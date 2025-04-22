@@ -22,12 +22,11 @@ export function AuthProvider({ children }) {
       localStorage.setItem("token", token);
       const decoded = decodeJWT(token);
       if (decoded) {
-        // Appelle l’API pour avoir le profil complet
         getUserProfile(decoded.id, token)
           .then(profile => setUser(profile))
           .catch(err => {
             console.error('Erreur lors du chargement du profil utilisateur:', err);
-            setUser({ id: decoded.id, role: decoded.role }); // fallback minimal
+            setUser({ id: decoded.id, role: decoded.role }); 
           });
       } else {
         setUser(null);
@@ -41,13 +40,11 @@ export function AuthProvider({ children }) {
   const loginUser = async (email, password) => {
     const res = await login(email, password);
     setToken(res.token);
-    // setUser sera appelé automatiquement par useEffect
     return decodeJWT(res.token);
   };
 
   const logout = () => {
     setToken(null);
-    // setUser sera appelé automatiquement par useEffect
   };
 
   return (

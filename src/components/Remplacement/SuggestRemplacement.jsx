@@ -14,13 +14,11 @@ export default function SuggestRemplacement() {
   const { token, user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  // Nouvelle logique : on gère une absence sélectionnée OU la liste de toutes les absences à remplacer
   const [selectedAbsence, setSelectedAbsence] = useState(location.state?.absence || null);
   const [absences, setAbsences] = useState([]);
   const [loadingAbsences, setLoadingAbsences] = useState(false);
   const [errorAbsences, setErrorAbsences] = useState("");
 
-  // Si aucune absence sélectionnée, on charge la liste de toutes les absences à remplacer
   useEffect(() => {
     if (!selectedAbsence && token) {
       setLoadingAbsences(true);
@@ -31,7 +29,6 @@ export default function SuggestRemplacement() {
     }
   }, [selectedAbsence, token]);
 
-  // Ancienne logique conservée pour la sélection d'une absence
   useEffect(() => {
     if (selectedAbsence) {
       localStorage.setItem("selectedAbsence", JSON.stringify(selectedAbsence));
@@ -44,7 +41,6 @@ export default function SuggestRemplacement() {
   const [error, setError] = useState("");
   const [modalPropose, setModalPropose] = useState({ open: false, candidat: null });
 
-  // Charge les candidats SEULEMENT si une absence est sélectionnée
   useEffect(() => {
     if (!token || !selectedAbsence || !selectedAbsence.employee) return;
     setLoading(true);
@@ -66,7 +62,7 @@ export default function SuggestRemplacement() {
       await proposerRemplacant(selectedAbsence.id, modalPropose.candidat.id, token);
       setSuccess("Remplaçant proposé avec succès !");
       setTimeout(() => {
-        setSelectedAbsence(null); // On revient à la liste après proposition
+        setSelectedAbsence(null); 
         setSuccess("");
       }, 1200);
     } catch (e) {
@@ -76,7 +72,6 @@ export default function SuggestRemplacement() {
     }
   };
 
-  // Affichage principal
   if (!selectedAbsence) {
     return (
       <div className="min-h-screen flex flex-col items-center bg-accent py-8">
@@ -111,7 +106,6 @@ export default function SuggestRemplacement() {
     );
   }
 
-  // Si une absence est sélectionnée, affiche la logique existante
   return (
     <div className="min-h-screen flex flex-col items-center bg-accent py-8">
       <div className="bg-white rounded-2xl shadow-lg px-8 py-10 w-full max-w-2xl mx-auto">

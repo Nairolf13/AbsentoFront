@@ -6,7 +6,6 @@ export default function PrivateRoute({ children }) {
   const auth = useAuth();
   const { token } = auth;
   if (!token) {
-    // LOG: Trace chaque redirection automatique vers /login
     console.warn('[PrivateRoute] Redirection vers /login car token absent ou null');
     return <Navigate to="/login" replace />;
   }

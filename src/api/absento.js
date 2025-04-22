@@ -2,7 +2,6 @@ import axios from 'axios';
 import { API_URL } from './config';
 
 export const login = async (email, password) => {
-  // Sécurisation : trim email et password pour éviter les espaces involontaires
   const { data } = await axios.post(`${API_URL}/auth/login`, {
     email: email.trim(),
     password: password.trim()
@@ -27,7 +26,6 @@ export const requestAbsence = async (absence, token) => {
   formData.append('type', absence.type);
   if (absence.motif) formData.append('motif', absence.motif);
   if (absence.justificatif) formData.append('justificatif', absence.justificatif);
-  // Harmonisation : toujours envoyer heureDebut et heureFin même si vides
   formData.append('heureDebut', absence.heureDebut || "");
   formData.append('heureFin', absence.heureFin || "");
   const { data } = await axios.post(`${API_URL}/absences/declarer`, formData, {
@@ -109,17 +107,9 @@ export const getAllAbsences = async (token) => {
   return data;
 };
 
-// Ajoute une fonction pour récupérer le profil utilisateur complet
 export const getUserProfile = async (userId, token) => {
   const { data } = await axios.get(`${API_URL}/utilisateur/${userId}`, {
     headers: { Authorization: `Bearer ${token}` }
   });
   return data;
 };
-
-// export const getEmployesEntreprise = async (token) => {
-//   const { data } = await axios.get(`${API_URL}/admin/employes`, {
-//     headers: { Authorization: `Bearer ${token}` },
-//   });
-//   return data;
-// };

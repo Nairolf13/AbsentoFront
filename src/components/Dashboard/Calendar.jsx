@@ -5,7 +5,7 @@ import { addDays, startOfWeek, format, isSameDay } from 'date-fns';
 import { fetchEmployees } from '../../api/employees';
 import { fetchEmployeePlanning, setEmployeePlanning, deleteEmployeePlanning } from '../../api/planning';
 import { useAuth } from '../../context/AuthProvider';
-import ConfirmModal from '../ui/ConfirmModal'; // Importez votre composant ConfirmModal
+import ConfirmModal from '../ui/ConfirmModal'; 
 import TaskList from "./TaskList";
 import { ChevronLeftIcon, ChevronRightIcon, PlusIcon } from '@heroicons/react/24/outline';
 import ReactDOM from "react-dom";
@@ -23,10 +23,9 @@ export default function AbsenceCalendar() {
   const { user, token } = useAuth();
 
   const [modalOpen, setModalOpen] = useState(false);
-  const [modalSlot, setModalSlot] = useState(null); // { dayIdx, hour }
+  const [modalSlot, setModalSlot] = useState(null); 
   const [taskLabel, setTaskLabel] = useState("");
 
-  // Charger la liste des employés si manager/rh/admin
   useEffect(() => {
     if (user && ["ADMIN", "MANAGER", "RH"].includes(user.role)) {
       setLoadingEmployees(true);
@@ -39,42 +38,34 @@ export default function AbsenceCalendar() {
     }
   }, [user, token]);
 
-  // Sélectionner par défaut l'utilisateur connecté
   useEffect(() => {
     if (user && !selectedEmployeeId) setSelectedEmployeeId(user.id);
   }, [user, selectedEmployeeId]);
 
-  // Calcule le début de la semaine affichée
   const weekStart = useMemo(() => addDays(startOfWeek(calendarDate, { weekStartsOn: 1 }), weekOffset * 7), [calendarDate, weekOffset]);
   const days = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart]);
 
-  // Filtrer les employés selon la recherche
   const filteredEmployees = employees.filter(e =>
     (e.nom + ' ' + e.prenom).toLowerCase().includes(search.toLowerCase())
   );
 
-  // Gérer le click sur une case horaire
   const handleSlotClick = (dayIdx, hour) => {
     setModalSlot({ dayIdx, hour });
     setTaskLabel("");
     setModalOpen(true);
   };
 
-  // --- NOUVEAU : Planning persistant ---
   const [events, setEvents] = useState([]);
   const [loadingPlanning, setLoadingPlanning] = useState(false);
 
-  // Charger le planning de l'employé sélectionné à chaque changement
   useEffect(() => {
     async function loadPlanning() {
       if (!selectedEmployeeId) return;
       setLoadingPlanning(true);
       try {
-        // On charge la semaine affichée
         const from = format(weekStart, 'yyyy-MM-dd');
         const to = format(addDays(weekStart, 6), 'yyyy-MM-dd');
         const planning = await fetchEmployeePlanning(selectedEmployeeId, from, to, token);
-        // Mapping pour affichage
         setEvents(
           planning
             .filter(ev => ev.label && ev.label.trim() !== "")
@@ -82,7 +73,7 @@ export default function AbsenceCalendar() {
               const d = new Date(ev.date);
               return {
                 id: ev.id,
-                day: d.getDay() === 0 ? 6 : d.getDay() - 1, // Lundi=0 ...
+                day: d.getDay() === 0 ? 6 : d.getDay() - 1, 
                 hour: d.getHours(),
                 label: ev.label,
                 color: "bg-primary"
@@ -97,7 +88,6 @@ export default function AbsenceCalendar() {
     loadPlanning();
   }, [selectedEmployeeId, weekStart, token]);
 
-  // --- Enregistrer une tâche sur un créneau ---
   const handleSaveTask = async () => {
     if (modalSlot && taskLabel.trim()) {
       const date = new Date(days[modalSlot.dayIdx]);
@@ -106,7 +96,6 @@ export default function AbsenceCalendar() {
         { employeeId: selectedEmployeeId, date: date.toISOString(), label: taskLabel, moment: date.getHours() < 12 ? 'AM' : 'PM' }
       ], token);
       setModalOpen(false);
-      // Recharge le planning
       const from = format(weekStart, 'yyyy-MM-dd');
       const to = format(addDays(weekStart, 6), 'yyyy-MM-dd');
       const planning = await fetchEmployeePlanning(selectedEmployeeId, from, to, token);
@@ -127,7 +116,6 @@ export default function AbsenceCalendar() {
     }
   };
 
-  // --- Enregistrer une tâche sur une plage ---
   const handleSaveTaskRange = async () => {
     if (modalSlot && taskLabel.trim()) {
       const slots = [];
@@ -158,25 +146,22 @@ export default function AbsenceCalendar() {
     }
   };
 
-  // --- Supprimer une tâche sur un créneau ou une plage ---
   const [modalDeleteOpen, setModalDeleteOpen] = useState(false);
 
   const handleDeleteTask = async () => {
-    setModalDeleteOpen(true); // Ouvre la modal de confirmation
+    setModalDeleteOpen(true); 
   };
 
   const confirmDeleteTask = async () => {
     if (modalSlot) {
       let dates = [];
       if (modalSlot.start !== undefined && modalSlot.end !== undefined) {
-        // Plage
         for (let h = modalSlot.start; h <= modalSlot.end; h++) {
           const date = new Date(days[modalSlot.dayIdx]);
           date.setHours(h, 0, 0, 0);
           dates.push(date.toISOString());
         }
       } else {
-        // Simple créneau
         const date = new Date(days[modalSlot.dayIdx]);
         date.setHours(modalSlot.hour, 0, 0, 0);
         dates = [date.toISOString()];
@@ -206,9 +191,8 @@ export default function AbsenceCalendar() {
 
   const cancelDeleteTask = () => setModalDeleteOpen(false);
 
-  // Ajout pour sélection de plage horaire
   const [selecting, setSelecting] = useState(false);
-  const [rangeStart, setRangeStart] = useState(null); // { dayIdx, hour }
+  const [rangeStart, setRangeStart] = useState(null); 
   const [rangeEnd, setRangeEnd] = useState(null);
 
   const touchState = React.useRef({
@@ -220,7 +204,6 @@ export default function AbsenceCalendar() {
     startY: 0,
   });
 
-  // Gestion appui long pour sélection mobile, compatible multi-heures
   const longPressTimeout = React.useRef(null);
   const longPressTriggered = React.useRef(false);
 
@@ -242,18 +225,16 @@ export default function AbsenceCalendar() {
       setSelecting(true);
       setRangeStart({ dayIdx, hour });
       setRangeEnd({ dayIdx, hour });
-    }, 400); // 600ms : appui long plus réactif
+    }, 400); 
   };
 
   const handleTouchMove = (e) => {
     if (e.touches.length > 1) return;
     if (!longPressTriggered.current) {
-      // Si on bouge avant 1s, annule la sélection et laisse le scroll natif
       clearTimeout(longPressTimeout.current);
       longPressTimeout.current = null;
       return;
     }
-    // Après appui long validé, comportement de sélection multi-heures
     const touch = e.touches[0];
     let el = document.elementFromPoint(touch.clientX, touch.clientY);
     while (el && (!el.getAttribute('data-day') || !el.getAttribute('data-hour')) && el.parentElement) {
@@ -265,7 +246,7 @@ export default function AbsenceCalendar() {
       if (touchState.current.selecting && dayIdx === touchState.current.dayIdx) {
         setRangeEnd({ dayIdx, hour });
         touchState.current.end = { dayIdx, hour };
-        e.preventDefault(); // Bloque le scroll dès qu'on glisse dans la colonne
+        e.preventDefault(); 
       }
     }
   };
@@ -299,9 +280,7 @@ export default function AbsenceCalendar() {
     touchState.current = { selecting: false, start: null, end: null, dayIdx: null, startX: 0, startY: 0 };
   };
 
-  // Gestion tactile pour mobile
   const getSlotFromTouch = (e) => {
-    // Trouve l'élément cible de la touche (div[data-day][data-hour])
     const touch = e.touches[0];
     const el = document.elementFromPoint(touch.clientX, touch.clientY);
     if (!el) return null;
@@ -313,7 +292,6 @@ export default function AbsenceCalendar() {
     return null;
   };
 
-  // Correction gestion tactile mobile : empêche le scroll et garantit la sélection
   const handleSlotMouseDown = (dayIdx, hour) => {
     setSelecting(true);
     setRangeStart({ dayIdx, hour });
@@ -331,7 +309,7 @@ export default function AbsenceCalendar() {
     if (rangeStart && rangeEnd) {
       setModalSlot({ dayIdx: rangeStart.dayIdx, start: Math.min(rangeStart.hour, rangeEnd.hour), end: Math.max(rangeStart.hour, rangeEnd.hour) });
       setTaskLabel("");
-      setTimeout(() => setModalOpen(true), 0); // Force l'ouverture après le render
+      setTimeout(() => setModalOpen(true), 0); 
     } else {
       setModalSlot(null);
       setTaskLabel("");
@@ -340,7 +318,6 @@ export default function AbsenceCalendar() {
     setRangeEnd(null);
   };
 
-  // Helper pour savoir si une case est sélectionnée
   const isSlotSelected = (dayIdx, hour) => {
     if (!(selecting || touchState.current.selecting) || !(rangeStart || touchState.current.start) || !(rangeEnd || touchState.current.end)) return false;
     const s = selecting ? rangeStart : touchState.current.start;
@@ -352,10 +329,8 @@ export default function AbsenceCalendar() {
     return hour >= minH && hour <= maxH;
   };
 
-  // 1. Ref pour le conteneur de grille mobile
   const mobileGridRef = React.useRef(null);
 
-  // 2. useEffect pour attacher le listener touchmove non passif
   useEffect(() => {
     const grid = mobileGridRef.current;
     if (!grid) return;
@@ -366,10 +341,8 @@ export default function AbsenceCalendar() {
 
   return (
     <div className="w-full">
-      {/* MOBILE : planning compact, UX++ */}
       <div className="block lg:hidden">
         <div className="bg-white rounded-2xl shadow-md p-3 mt-2">
-          {/* Header semaine mobile */}
           <div className="flex items-center justify-between mb-2">
             <button onClick={() => setWeekOffset(weekOffset - 1)} className="p-2 rounded-full bg-primary/10 hover:bg-primary/20 text-primary">
               <ChevronLeftIcon className="w-6 h-6" />
@@ -381,7 +354,6 @@ export default function AbsenceCalendar() {
               <ChevronRightIcon className="w-6 h-6" />
             </button>
           </div>
-          {/* Jours de la semaine (compact, horizontal) */}
           <div className="flex w-full border-b border-accent mb-2">
             {days.map((date, idx) => (
               <div key={idx} className="flex-1 flex flex-col items-center py-1 px-0">
@@ -390,7 +362,6 @@ export default function AbsenceCalendar() {
               </div>
             ))}
           </div>
-          {/* Grille planning : une ligne par heure, colonnes jours */}
           <div className="overflow-x-auto" ref={mobileGridRef}>
             <div className="flex flex-col">
               {HOURS.map((h) => (
@@ -436,18 +407,14 @@ export default function AbsenceCalendar() {
             </div>
           </div>
         </div>
-        {/* Bloc tâches sous le planning */}
         <div className="bg-white rounded-2xl shadow p-4 mt-4">
           <h4 className="text-lg font-semibold text-primary mb-2">Mes tâches</h4>
           <TaskList />
         </div>
       </div>
-      {/* Desktop : affichage classique en flex-row */}
       <div className="hidden lg:flex flex-col lg:flex-row h-full w-full">
-        {/* Sidebar calendrier */}
         <aside className="w-full lg:w-64 bg-white border-r border-secondary flex flex-col items-center py-6">
           <div className="w-full px-2">
-            {/* Sélecteur d'employé pour manager/rh/admin */}
             {user && ["ADMIN", "MANAGER", "RH"].includes(user.role) && (
               <div className="mb-4">
                 <input
@@ -471,7 +438,6 @@ export default function AbsenceCalendar() {
                 </select>
               </div>
             )}
-            {/* Correction : calendarType="iso8601" fonctionne */}
             <div className="w-full">
               <Calendar
                 locale="fr-FR"
@@ -492,9 +458,7 @@ export default function AbsenceCalendar() {
             </div>
           </div>
         </aside>
-        {/* Vue planning semaine */}
         <main className="w-full lg:flex-1 flex flex-col bg-accent mt-6 lg:mt-0" style={{maxWidth: '100vw', overflowX: 'auto'}}>
-          {/* En-têtes jours */}
           <div className="flex border-b border-secondary bg-white min-w-[350px] md:min-w-[600px] lg:min-w-[800px]">
             <div className="w-12 md:w-14 lg:w-16" />
             {days.map((date, idx) => (
@@ -503,9 +467,7 @@ export default function AbsenceCalendar() {
               </div>
             ))}
           </div>
-          {/* Grille horaires */}
           <div className="flex-1 flex overflow-x-auto select-none min-w-[350px] md:min-w-[600px] lg:min-w-[800px]" onMouseUp={handleSlotMouseUp}>
-            {/* Colonne heures */}
             <div className="w-12 md:w-14 lg:w-16 flex flex-col">
               {HOURS.map((h) => (
                 <div key={h} className="h-16 flex items-center justify-center text-xs text-secondary border-b border-accent">
@@ -513,7 +475,6 @@ export default function AbsenceCalendar() {
                 </div>
               ))}
             </div>
-            {/* Colonnes jours */}
             {days.map((date, dayIdx) => (
               <div key={dayIdx} className="flex-1 flex flex-col border-l border-secondary">
                 {HOURS.map((h) => {
@@ -547,7 +508,6 @@ export default function AbsenceCalendar() {
               </div>
             ))}
           </div>
-          {/* Modal d'édition avec bouton supprimer */}
           {modalOpen && modalSlot && ReactDOM.createPortal(
             <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center" style={{ zIndex: 9999 }}>
               <div className="bg-white rounded-xl p-6 w-full max-w-xs shadow-lg mx-2">
@@ -578,7 +538,6 @@ export default function AbsenceCalendar() {
             </div>,
             document.body
           )}
-          {/* Modal de confirmation suppression */}
           <ConfirmModal
             open={modalDeleteOpen}
             title="Supprimer la tâche ?"

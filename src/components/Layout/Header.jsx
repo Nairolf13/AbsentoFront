@@ -14,7 +14,6 @@ export default function Header() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [showAbsenceToast, setShowAbsenceToast] = useState(false);
 
-  // Charger le nombre de notifications non lues au montage
   useEffect(() => {
     if (user && token) {
       getUserNotifications(user.id, token).then(data => {
@@ -29,9 +28,7 @@ export default function Header() {
     }
   }, [user, token]);
 
-  // Récupère le nombre de notifications depuis Notifications.jsx
   useEffect(() => {
-    // Utilise un event personnalisé pour synchroniser le compteur
     const handleNotifCount = (e) => setNotifCount(e.detail);
     window.addEventListener("notifCount", handleNotifCount);
     return () => window.removeEventListener("notifCount", handleNotifCount);
@@ -40,7 +37,6 @@ export default function Header() {
   useEffect(() => {
     const handler = () => {
       setShowAbsenceToast(true);
-      // Recharge les notifications immédiatement
       if (user && token) {
         getUserNotifications(user.id, token).then(data => {
           console.log('Data dans Header.jsx:', data);
@@ -51,7 +47,6 @@ export default function Header() {
           const unread = data.filter(n => !n.lu).length;
           setNotifCount(unread);
         });
-        // Re-fetch après 1 seconde
         setTimeout(() => {
           getUserNotifications(user.id, token).then(data => {
             console.log('Data dans Header.jsx:', data);
@@ -63,7 +58,6 @@ export default function Header() {
             setNotifCount(unread);
           });
         }, 1000);
-        // Re-fetch après 5 secondes
         setTimeout(() => {
           getUserNotifications(user.id, token).then(data => {
             console.log('Data dans Header.jsx:', data);
@@ -75,7 +69,6 @@ export default function Header() {
             setNotifCount(unread);
           });
         }, 5000);
-        // Re-fetch après 10 secondes
         setTimeout(() => {
           getUserNotifications(user.id, token).then(data => {
             console.log('Data dans Header.jsx:', data);
@@ -94,7 +87,6 @@ export default function Header() {
     return () => window.removeEventListener("absenceDeclared", handler);
   }, [user, token]);
 
-  // Rafraîchit les notifications à chaque event refreshNotifications
   useEffect(() => {
     const refresh = () => {
       if (user && token) {

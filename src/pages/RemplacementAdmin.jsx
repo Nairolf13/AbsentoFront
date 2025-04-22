@@ -21,7 +21,6 @@ export default function RemplacementAdmin() {
   }, [token]);
 
   const handleChoisirRemplacant = (absence) => {
-    // Stocke l'absence dans le localStorage pour la navigation robuste
     localStorage.setItem("selectedAbsence", JSON.stringify(absence));
     navigate("/remplacement-suggest", { state: { absence } });
   };

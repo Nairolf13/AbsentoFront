@@ -54,7 +54,6 @@ export default function EmployeeAdmin() {
     if (token) fetchEmployees();
   }, [token]);
 
-  // CSV Upload Handler
   const handleCsvDrop = (e) => {
     e.preventDefault();
     setCsvError(""); setCsvSuccess("");
@@ -91,7 +90,6 @@ export default function EmployeeAdmin() {
   const handleCsvAdd = async () => {
     if (!csvData || csvData.length === 0) return;
     setCsvError(""); setCsvSuccess(""); setCsvLoading(true);
-    // Validation côté frontend
     const requiredFields = ["nom", "prenom", "email", "telephone", "dateNaissance", "adresse", "poste", "role"];
     const validRows = [];
     const invalidRows = [];
@@ -137,7 +135,6 @@ export default function EmployeeAdmin() {
     }
   };
 
-  // Single Employee Handler
   const handleSingleChange = (e) => {
     setSingleForm(f => ({ ...f, [e.target.name]: e.target.value }));
   };
@@ -146,7 +143,6 @@ export default function EmployeeAdmin() {
     setSingleError(""); setSingleSuccess("");
     setSingleLoading(true);
     try {
-      // Appel réel au backend pour créer l'employé
       const res = await fetch(`${import.meta.env.VITE_API_URL}/password/invite`, {
         method: "POST",
         headers: {
@@ -161,8 +157,8 @@ export default function EmployeeAdmin() {
       } else {
         setSingleSuccess("Employé ajouté et mail d'invitation envoyé");
         setSingleForm({ nom: "", prenom: "", email: "", telephone: "", dateNaissance: "", adresse: "", poste: "", role: "EMPLOYE" });
-        setShowAddForm(false); // Ferme le formulaire
-        await fetchEmployees(); // Rafraîchit la liste automatiquement
+        setShowAddForm(false); 
+        await fetchEmployees(); 
       }
     } catch {
       setSingleError("Erreur lors de l'ajout");
@@ -199,13 +195,11 @@ export default function EmployeeAdmin() {
     return new Set(employees.map(e => e.email.toLowerCase()));
   };
 
-  // --- Tri alphabétique ---
   const sortedEmployees = [...employees].sort((a, b) => {
     const nomA = (a.nom || '').toLowerCase();
     const nomB = (b.nom || '').toLowerCase();
     if (nomA < nomB) return -1;
     if (nomA > nomB) return 1;
-    // Si même nom, trie par prénom
     const prenomA = (a.prenom || '').toLowerCase();
     const prenomB = (b.prenom || '').toLowerCase();
     if (prenomA < prenomB) return -1;
@@ -333,7 +327,6 @@ export default function EmployeeAdmin() {
         )}
         {csvData && csvData.length > 0 && (() => {
           const existingEmails = getExistingEmails();
-          // Trie : d'abord ceux qui peuvent être ajoutés (vert), ensuite ceux déjà existants (rouge)
           const sortedRows = [...csvData].sort((a, b) => {
             const aExists = existingEmails.has((a.email || '').toLowerCase());
             const bExists = existingEmails.has((b.email || '').toLowerCase());
@@ -410,9 +403,7 @@ export default function EmployeeAdmin() {
                 setEditError("");
                 setEditLoading(true);
                 try {
-                  // Ne garder que les champs attendus par le backend
                   const { id, entreprise, createdAt, updatedAt, ...toSend } = editEmp;
-                  // Correction format date
                   if (toSend.dateNaissance && typeof toSend.dateNaissance === "object") {
                     toSend.dateNaissance = toSend.dateNaissance.toISOString().split('T')[0];
                   }

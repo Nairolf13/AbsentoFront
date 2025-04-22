@@ -19,9 +19,7 @@ import EmployeeDashboardTab from "./components/Employee/EmployeeDashboardTab";
 
 function AppContent() {
   const { pathname } = useLocation();
-  const { token } = useAuth();
-  // Affiche le header si connecté ET pas sur la home, login ou register
-  const showHeader = token && !["/", "/login", "/register"].includes(pathname);
+  const { token } = useAuth();  const showHeader = token && !["/", "/login", "/register"].includes(pathname);
   return (
     <div className="min-h-screen bg-accent">
       {showHeader && <HeaderWithAuth />}

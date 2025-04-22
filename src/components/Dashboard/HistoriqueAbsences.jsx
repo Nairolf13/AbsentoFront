@@ -55,7 +55,6 @@ export default function HistoriqueAbsences() {
   const handleOpenModifier = async (absence) => {
     setSelectedAbsence(absence);
     setRemplacantId("");
-    // Charge la liste des employés à l'ouverture de la modal
     try {
       const emps = await fetchEmployees(token);
       setEmployees(emps);
@@ -68,9 +67,7 @@ export default function HistoriqueAbsences() {
     if (!remplacantId) return;
     setActionLoading(true);
     try {
-      // Appel API pour modifier le remplaçant
       const updated = await proposerRemplacant(selectedAbsence.id, remplacantId, token);
-      // Met à jour l'affichage localement
       setAbsences(absences => absences.map(a =>
         a.id === selectedAbsence.id
           ? { ...a, remplacement: { ...a.remplacement, remplacant: employees.find(e => e.id === Number(remplacantId)) } }

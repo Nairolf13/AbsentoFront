@@ -14,7 +14,6 @@ export default function TaskList() {
   const [editValue, setEditValue] = useState("");
   const [modalDelete, setModalDelete] = useState({ open: false, task: null });
 
-  // Fetch tasks on mount
   useEffect(() => {
     if (!token) return;
     setLoading(true);
@@ -32,7 +31,6 @@ export default function TaskList() {
       });
   }, [token]);
 
-  // Add a new task
   const handleAdd = async (e) => {
     e.preventDefault();
     if (!newTask.trim()) return;
@@ -51,7 +49,6 @@ export default function TaskList() {
     }
   };
 
-  // Suppression tâche avec confirmation
   const handleDelete = (task) => setModalDelete({ open: true, task });
   const confirmDelete = async () => {
     if (!modalDelete.task) return;
@@ -63,7 +60,6 @@ export default function TaskList() {
     setModalDelete({ open: false, task: null });
   };
 
-  // Edit a task
   const startEdit = (id, title) => {
     setEditingId(id);
     setEditValue(title);
@@ -84,7 +80,6 @@ export default function TaskList() {
     }
   };
 
-  // Toggle completed
   const toggleCompleted = async (id, completed) => {
     const res = await fetch(`${API_URL}/tasks/${id}`, {
       method: "PUT",

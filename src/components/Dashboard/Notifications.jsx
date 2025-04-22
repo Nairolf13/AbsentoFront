@@ -7,13 +7,11 @@ export default function Notifications({ onCountChange }) {
   const { user, token } = useAuth();
   const [notifications, setNotifications] = useState([]);
 
-  // Charger les notifications persistées au chargement
   useEffect(() => {
     if (user && token) {
       getUserNotifications(user.id, token).then(data => {
         const sorted = data.sort((a, b) => new Date(b.date) - new Date(a.date));
         setNotifications(sorted);
-        // Synchronise le compteur avec le nombre de notifications non lues dès le chargement
         const unread = sorted.filter(n => !n.lu).length;
         if (onCountChange) onCountChange(unread);
         window.dispatchEvent(new CustomEvent("notifCount", { detail: unread }));
@@ -21,7 +19,6 @@ export default function Notifications({ onCountChange }) {
     }
   }, [user, token, onCountChange]);
 
-  // Socket.io : rejoindre la room et écouter les notifications push
   useSocket((event, payload) => {
     if (event === "notification") {
       setNotifications(n => {
@@ -31,7 +28,6 @@ export default function Notifications({ onCountChange }) {
     }
   }, [user]);
 
-  // Identification socket.io (pour rejoindre la bonne room)
   useEffect(() => {
     if (!user) return;
     const socket = window.io && window.io();
@@ -40,7 +36,6 @@ export default function Notifications({ onCountChange }) {
     }
   }, [user]);
 
-  // Suppression d'une notification
   const handleDelete = async (id) => {
     try {
       await deleteNotification(id, token);
@@ -53,7 +48,6 @@ export default function Notifications({ onCountChange }) {
     }
   };
 
-  // Marquer une notification comme lue
   const handleMarkAsRead = async (id) => {
     try {
       await markNotificationAsRead(id, token);
@@ -63,10 +57,8 @@ export default function Notifications({ onCountChange }) {
     }
   };
 
-  // Helper pour compter les notifications non lues
   const unreadCount = notifications.filter(n => !n.lu).length;
 
-  // Notifier le header à chaque changement de notifications non lues
   useEffect(() => {
     if (onCountChange) onCountChange(unreadCount);
     window.dispatchEvent(new CustomEvent("notifCount", { detail: unreadCount }));

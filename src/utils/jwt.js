@@ -1,4 +1,3 @@
-// Décoder un JWT sans vérification (base64 only)
 export function decodeJWT(token) {
   if (!token) return null;
   try {
