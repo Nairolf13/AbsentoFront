@@ -45,32 +45,36 @@ export default function RequestAbsenceForm() {
               <label className="block mb-1 text-secondary text-center text-xs sm:text-sm">Date de début</label>
               <div className="relative">
                 <input type="date" className="block w-full rounded-xl border border-primary px-3 py-2 sm:px-4 sm:py-3 focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-700 text-xs sm:text-base appearance-none bg-white pr-10" value={dateDebut} onChange={e => setDateDebut(e.target.value)} required />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-primary">
+                {/* Icône calendrier unique, supprimée dupliquée par Chrome/OS */}
+                {/* <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-primary">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                </span>
+                </span> */}
               </div>
               <label className="block mt-1 mb-1 text-secondary text-center text-xs sm:text-sm">Heure de début</label>
               <div className="relative">
-                <input type="time" className="block w-full rounded-xl border border-primary px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-700 text-xs sm:text-base appearance-none bg-white pr-10" value={heureDebut} onChange={e => setHeureDebut(e.target.value)} required />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-primary">
+                <input type="time" className="block w-full rounded-xl border border-primary px-3 py-2 pr-3 focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-700 text-xs sm:text-base appearance-none bg-white" value={heureDebut} onChange={e => setHeureDebut(e.target.value)} required />
+                {/* Icône horloge unique, supprimée dupliquée par Chrome/OS */}
+                {/* <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-primary">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                </span>
+                </span> */}
               </div>
             </div>
             <div className="w-full sm:w-1/2">
               <label className="block mb-1 text-secondary text-center text-xs sm:text-sm">Date de fin</label>
               <div className="relative">
                 <input type="date" className="block w-full rounded-xl border border-primary px-3 py-2 sm:px-4 sm:py-3 focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-700 text-xs sm:text-base appearance-none bg-white pr-10" value={dateFin} onChange={e => setDateFin(e.target.value)} required />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-primary">
+                {/* Icône calendrier unique, supprimée dupliquée par Chrome/OS */}
+                {/* <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-primary">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                </span>
+                </span> */}
               </div>
               <label className="block mt-1 mb-1 text-secondary text-center text-xs sm:text-sm">Heure de fin</label>
               <div className="relative">
-                <input type="time" className="block w-full rounded-xl border border-primary px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-700 text-xs sm:text-base appearance-none bg-white pr-10" value={heureFin} onChange={e => setHeureFin(e.target.value)} required />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-primary">
+                <input type="time" className="block w-full rounded-xl border border-primary px-3 py-2 pr-3 focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-700 text-xs sm:text-base appearance-none bg-white" value={heureFin} onChange={e => setHeureFin(e.target.value)} required />
+                {/* Icône horloge unique, supprimée dupliquée par Chrome/OS */}
+                {/* <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-primary">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                </span>
+                </span> */}
               </div>
             </div>
           </div>

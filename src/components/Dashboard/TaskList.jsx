@@ -214,6 +214,7 @@ export default function TaskList() {
         onClose={() => setShowAddModal(false)}
         onAdd={async ({ title, userId }) => {
           const body = { title };
+          // Réactive l'ajout du userId si manager/admin et userId sélectionné
           if (isManager && userId) body.userId = Number(userId);
           const res = await fetch(`${API_URL}/tasks`, {
             method: "POST",
@@ -223,11 +224,15 @@ export default function TaskList() {
             credentials: 'include',
             body: JSON.stringify(body),
           });
+          if (!res.ok) {
+            const err = await res.json();
+            return err;
+          }
           if (res.ok) {
             const task = await res.json();
             setTasks((ts) => [...ts, task]);
+            // Rafraîchit les tâches assignées si besoin
             if (isManager && userId && userId !== user.id) {
-              // Refresh assigned tasks
               fetch(`${API_URL}/tasks/assigned-by-me`, {
                 credentials: 'include',
               })

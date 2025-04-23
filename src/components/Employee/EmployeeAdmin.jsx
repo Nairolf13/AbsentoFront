@@ -4,7 +4,7 @@ import { useAuth } from "../../context/AuthProvider";
 import { useNavigate } from "react-router-dom";
 import ConfirmModal from "../ui/ConfirmModal";
 import "../ui/animations.css";
-import { fetchEmployees as fetchEmployeesApi } from '../../api/employees';
+import { fetchEmployees as fetchEmployeesApi, addEmployee } from '../../api/employees';
 
 export default function EmployeeAdmin() {
   const { user } = useAuth();
@@ -34,6 +34,7 @@ export default function EmployeeAdmin() {
   const [editSuccess, setEditSuccess] = useState("");
   const [editLoading, setEditLoading] = useState(false);
   const [modalDelete, setModalDelete] = useState({ open: false, emp: null });
+  const [csvImportResult, setCsvImportResult] = useState(null);
 
   const navigate = useNavigate();
   const csvInputRef = useRef(null);
@@ -91,6 +92,7 @@ export default function EmployeeAdmin() {
   const handleCsvAdd = async () => {
     if (!csvData || csvData.length === 0) return;
     setCsvError(""); setCsvSuccess(""); setCsvLoading(true);
+    setCsvImportResult(null); // Reset avant nouvel import
     const requiredFields = ["nom", "prenom", "email", "telephone", "dateNaissance", "adresse", "poste", "role"];
     const validRows = [];
     const invalidRows = [];
@@ -114,9 +116,11 @@ export default function EmployeeAdmin() {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: 'include',
         body: JSON.stringify(validRows)
       });
       const data = await res.json();
+      setCsvImportResult(data); // Enregistre le résultat pour la coloration
       if (!res.ok) {
         setCsvError(data.message || "Erreur lors de l'import des employés.");
       } else {
@@ -127,6 +131,7 @@ export default function EmployeeAdmin() {
         if (data.invalid?.length) msg += `${data.invalid.length} lignes invalides ignorées côté backend : ${data.invalid.join(", ")}.`;
         setCsvSuccess(msg.trim());
         setCsvData(null);
+        fetchEmployees(); // Rafraîchit la liste des employés
       }
     } catch (e) {
       setCsvError("Erreur lors de l'import des employés.");
@@ -138,29 +143,42 @@ export default function EmployeeAdmin() {
   const handleSingleChange = (e) => {
     setSingleForm(f => ({ ...f, [e.target.name]: e.target.value }));
   };
+
   const handleSingleSubmit = async (e) => {
     e.preventDefault();
-    setSingleError(""); setSingleSuccess("");
     setSingleLoading(true);
+    setSingleError("");
+    setSingleSuccess("");
+    // Vérification côté frontend des champs obligatoires
+    const requiredFields = ["nom", "prenom", "email", "telephone", "dateNaissance", "adresse", "poste", "role"];
+    const missing = requiredFields.filter(f => !singleForm[f]);
+    if (missing.length > 0) {
+      setSingleError("Champs manquants : " + missing.join(", "));
+      setSingleLoading(false);
+      return;
+    }
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/password/invite`, {
+      await fetch(`${import.meta.env.VITE_API_URL}/password/invite`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
+        credentials: 'include',
         body: JSON.stringify([singleForm])
       });
-      const data = await res.json();
-      if (!res.ok) {
-        setSingleError(data.message || "Erreur lors de l'ajout");
-      } else {
-        setSingleSuccess("Employé ajouté et mail d'invitation envoyé");
-        setSingleForm({ nom: "", prenom: "", email: "", telephone: "", dateNaissance: "", adresse: "", poste: "", role: "EMPLOYE" });
-        setShowAddForm(false); 
-        await fetchEmployees(); 
-      }
-    } catch {
-      setSingleError("Erreur lors de l'ajout");
+      setSingleSuccess("Employé ajouté et mail d'invitation envoyé");
+      setSingleForm({
+        nom: "",
+        prenom: "",
+        email: "",
+        telephone: "",
+        dateNaissance: "",
+        adresse: "",
+        poste: "",
+        role: "EMPLOYE"
+      });
+      fetchEmployees();
+      setShowAddForm(false);
+    } catch (e) {
+      setSingleError(e.message || "Erreur lors de l'ajout de l'employé.");
     } finally {
       setSingleLoading(false);
     }
@@ -178,6 +196,7 @@ export default function EmployeeAdmin() {
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/utilisateur/${modalDelete.emp.id}`, {
         method: "DELETE",
+        credentials: 'include', // Ajouté pour transmettre le cookie JWT
       });
       if (res.ok) {
         setEmployees((emps) => emps.filter((e) => e.id !== modalDelete.emp.id));
@@ -366,6 +385,98 @@ export default function EmployeeAdmin() {
                   <div className="text-xs text-secondary mt-2">
                     Colonnes attendues : nom, prenom, email, telephone, dateNaissance (YYYY-MM-DD), adresse, poste, role (EMPLOYE ou ADMIN)
                   </div>
+                  {/* Affichage des messages CSV */}
+                  {csvError && <div className="mt-2 text-xs text-red-600 font-semibold">{csvError}</div>}
+                  {csvImportResult && (
+                    <div className="mt-2 text-xs font-semibold">
+                      {/* Employés ajoutés */}
+                      {csvImportResult.created && csvImportResult.created.length > 0 && (
+                        <div>
+                          {csvImportResult.created.length} employé(s) importé(s) : {csvImportResult.created.map((email, i) => (
+                            <span key={email} className="text-green-700 font-bold">{email}{i < csvImportResult.created.length - 1 ? ', ' : ''}</span>
+                          ))}
+                        </div>
+                      )}
+                      {/* Employés ignorés */}
+                      {csvImportResult.ignored && csvImportResult.ignored.length > 0 && (
+                        <div>
+                          {csvImportResult.ignored.length} déjà existant(s) ignoré(s) : {csvImportResult.ignored.map((email, i) => (
+                            <span key={email} className="text-red-700 font-bold">{email}{i < csvImportResult.ignored.length - 1 ? ', ' : ''}</span>
+                          ))}
+                        </div>
+                      )}
+                      {/* Lignes invalides côté frontend */}
+                      {csvImportResult.invalid && csvImportResult.invalid.length > 0 && (
+                        <div className="text-orange-700">
+                          {csvImportResult.invalid.length} lignes invalides ignorées côté backend : {csvImportResult.invalid.join(', ')}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {!csvImportResult && csvSuccess && (
+                    <div className="mt-2 text-xs text-green-600 font-semibold">{csvSuccess}</div>
+                  )}
+                  {/* Prévisualisation des employés du CSV */}
+                  {(csvData && csvData.length > 0) && (
+                    <div className="mt-4 max-h-64 overflow-y-auto">
+                      <table className="w-full text-sm border">
+                        <thead>
+                          <tr>
+                            <th className="px-2 py-1 border">Nom</th>
+                            <th className="px-2 py-1 border">Prénom</th>
+                            <th className="px-2 py-1 border">Email</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {csvData.map((row, idx) => {
+                            // Après import, affiche le statut selon le résultat
+                            let rowClass = '';
+                            if (csvImportResult) {
+                              if (csvImportResult.created && csvImportResult.created.includes(row.email)) {
+                                rowClass = 'bg-green-100';
+                              } else if (csvImportResult.ignored && csvImportResult.ignored.includes(row.email)) {
+                                rowClass = 'bg-red-100';
+                              } else {
+                                rowClass = '';
+                              }
+                            } else {
+                              const emailExists = employees.some(e => e.email && row.email && e.email.toLowerCase() === row.email.toLowerCase());
+                              rowClass = emailExists ? 'bg-red-100' : 'bg-green-100';
+                            }
+                            // Nom en couleur selon statut
+                            let nomClass = '';
+                            if (csvImportResult) {
+                              if (csvImportResult.created && csvImportResult.created.includes(row.email)) {
+                                nomClass = 'text-green-700 font-semibold';
+                              } else if (csvImportResult.ignored && csvImportResult.ignored.includes(row.email)) {
+                                nomClass = 'text-red-700 font-semibold';
+                              }
+                            }
+                            return (
+                              <tr key={idx} className={rowClass}>
+                                <td className={`px-2 py-1 border ${nomClass}`}>{row.nom}</td>
+                                <td className="px-2 py-1 border">{row.prenom}</td>
+                                <td className="px-2 py-1 border">{row.email}</td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                      <div className="text-xs mt-2">
+                        <span className="inline-block w-3 h-3 bg-green-200 mr-1 border border-green-600 align-middle"></span> = Peut être ajouté / a été ajouté<br />
+                        <span className="inline-block w-3 h-3 bg-red-200 ml-4 mr-1 border border-red-600 align-middle"></span> = Déjà existant / ignoré
+                      </div>
+                    </div>
+                  )}
+                  {/* Bouton Importer les employés */}
+                  <button
+                    className="mt-4 px-6 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={!csvData || csvLoading}
+                    onClick={handleCsvAdd}
+                    type="button"
+                  >
+                    Importer les employés
+                  </button>
                 </div>
               </div>
               {/* Section Ajout Manuel */}
@@ -421,6 +532,8 @@ export default function EmployeeAdmin() {
                   <input type="text" name="poste" placeholder="Poste" className="block w-full rounded-xl border border-primary px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-700" value={singleForm.poste} onChange={handleSingleChange} required />
                   <select name="role" className="block w-full rounded-xl border border-primary px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-700" value={singleForm.role} onChange={handleSingleChange} required>
                     <option value="EMPLOYE">Employé</option>
+                    <option value="MANAGER">Manager</option>
+                    <option value="RH">RH</option>
                     <option value="ADMIN">Admin</option>
                   </select>
                   <button className="w-full bg-primary text-white font-bold py-3 rounded-xl hover:bg-primary/80 transition" type="submit" disabled={singleLoading}>Ajouter</button>
@@ -434,6 +547,78 @@ export default function EmployeeAdmin() {
         {/* Overlay du formulaire d'ajout (manuel + CSV) */}
         {/* Fin du formulaire d'ajout employé */}
       </div>
+      {/* Modale de confirmation suppression */}
+      <ConfirmModal
+        open={modalDelete.open}
+        onClose={() => setModalDelete({ open: false, emp: null })}
+        onConfirm={confirmDelete}
+        title="Confirmer la suppression"
+        description={modalDelete.emp ? `Supprimer l'employé ${modalDelete.emp.prenom} ${modalDelete.emp.nom} ?` : ''}
+      />
+      {/* Modale d'édition employé */}
+      {editEmp && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-2xl shadow-2xl px-8 py-10 w-full max-w-xl mx-auto relative animate-fade-in">
+            <button
+              className="absolute top-4 right-4 text-gray-400 hover:text-red-500 text-2xl font-bold"
+              onClick={() => setEditEmp(null)}
+              aria-label="Fermer"
+            >×</button>
+            <h3 className="font-semibold text-lg mb-4 text-center">Modifier l'employé</h3>
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                setEditLoading(true);
+                setEditError("");
+                setEditSuccess("");
+                try {
+                  const res = await fetch(`${import.meta.env.VITE_API_URL}/utilisateur/${editEmp.id}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: 'include',
+                    body: JSON.stringify(editEmp)
+                  });
+                  if (!res.ok) {
+                    const data = await res.json();
+                    setEditError(data.error || "Erreur lors de la modification");
+                  } else {
+                    setEditSuccess("Employé modifié avec succès");
+                    fetchEmployees();
+                    setTimeout(() => setEditEmp(null), 1000);
+                  }
+                } catch (e) {
+                  setEditError("Erreur lors de la modification");
+                } finally {
+                  setEditLoading(false);
+                }
+              }}
+              className="space-y-4"
+            >
+              <div className="flex gap-2">
+                <input type="text" value={editEmp.nom} onChange={e => setEditEmp(emp => ({ ...emp, nom: e.target.value }))} placeholder="Nom" className="block w-full rounded-xl border border-primary px-4 py-3" required />
+                <input type="text" value={editEmp.prenom} onChange={e => setEditEmp(emp => ({ ...emp, prenom: e.target.value }))} placeholder="Prénom" className="block w-full rounded-xl border border-primary px-4 py-3" required />
+              </div>
+              <input type="email" value={editEmp.email} onChange={e => setEditEmp(emp => ({ ...emp, email: e.target.value }))} placeholder="Email" className="block w-full rounded-xl border border-primary px-4 py-3" required />
+              <input type="tel" value={editEmp.telephone} onChange={e => setEditEmp(emp => ({ ...emp, telephone: e.target.value }))} placeholder="Téléphone" className="block w-full rounded-xl border border-primary px-4 py-3" required />
+              <input type="text" value={editEmp.adresse} onChange={e => setEditEmp(emp => ({ ...emp, adresse: e.target.value }))} placeholder="Adresse" className="block w-full rounded-xl border border-primary px-4 py-3" required />
+              <input type="text" value={editEmp.poste} onChange={e => setEditEmp(emp => ({ ...emp, poste: e.target.value }))} placeholder="Poste" className="block w-full rounded-xl border border-primary px-4 py-3" required />
+              <select value={editEmp.role} onChange={e => setEditEmp(emp => ({ ...emp, role: e.target.value }))} className="block w-full rounded-xl border border-primary px-4 py-3" required>
+                <option value="EMPLOYE">Employé</option>
+                <option value="MANAGER">Manager</option>
+                <option value="RH">RH</option>
+                <option value="ADMIN">Admin</option>
+              </select>
+              <input type="date" value={editEmp.dateNaissance ? (typeof editEmp.dateNaissance === 'string' ? editEmp.dateNaissance.split('T')[0] : new Date(editEmp.dateNaissance).toISOString().split('T')[0]) : ''} onChange={e => setEditEmp(emp => ({ ...emp, dateNaissance: e.target.value }))} className="block w-full rounded-xl border border-primary px-4 py-3" required />
+              <div className="flex gap-2">
+                <button type="submit" className="bg-primary text-white font-bold px-6 py-2 rounded-xl hover:bg-primary/80 transition" disabled={editLoading}>Enregistrer</button>
+                <button type="button" className="bg-gray-300 text-gray-700 font-bold px-6 py-2 rounded-xl hover:bg-gray-400 transition" onClick={() => setEditEmp(null)}>Annuler</button>
+              </div>
+              {editError && <div className="text-xs text-red-600 text-center mt-2">{editError}</div>}
+              {editSuccess && <div className="text-xs text-green-600 text-center mt-2">{editSuccess}</div>}
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
