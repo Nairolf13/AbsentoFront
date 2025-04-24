@@ -3,12 +3,13 @@ import { API_URL } from './config';
 
 // Sécurisation : trim email et password pour éviter les espaces involontaires
 export const login = async (email, password) => {
-  await axios.post(`${API_URL}/auth/login`, {
+  const resp = await axios.post(`${API_URL}/auth/login`, {
     email: email.trim(),
     password: password.trim()
   }, {
     withCredentials: true
   });
+  return resp.data; // Retourne le token reçu
 };
 
 export const logout = async () => {
