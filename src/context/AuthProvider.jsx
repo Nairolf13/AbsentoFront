@@ -7,7 +7,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState(null);
-  const [token, setToken] = useState(() => localStorage.getItem("token") || null);
+  const [token, setToken] = useState(null);
 
   // Vérifie l'authentification à l'initialisation
   useEffect(() => {
@@ -17,13 +17,9 @@ export function AuthProvider({ children }) {
         setAuthError(null);
         const profile = await getUserProfile();
         setUser(profile);
-        // Essaie de récupérer le token du localStorage si présent
-        const storedToken = localStorage.getItem("token");
-        if (storedToken) setToken(storedToken);
       } catch (err) {
         setUser(null);
         setAuthError(null); 
-        setToken(null);
       } finally {
         setLoading(false);
       }
@@ -33,12 +29,7 @@ export function AuthProvider({ children }) {
 
   const loginUser = async (email, password) => {
     // login doit renvoyer le token JWT
-    const loginResp = await login(email, password); 
-    // Stocke le token côté frontend
-    if (loginResp && loginResp.token) {
-      localStorage.setItem("token", loginResp.token);
-      setToken(loginResp.token);
-    }
+    await login(email, password); 
     const profile = await getUserProfile();
     setUser(profile);
     setAuthError(null);
@@ -50,7 +41,6 @@ export function AuthProvider({ children }) {
     setUser(null);
     setAuthError(null);
     setToken(null);
-    localStorage.removeItem("token");
   };
 
   return (
