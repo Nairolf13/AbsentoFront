@@ -26,7 +26,7 @@ export default function AddTaskModal({ open, onClose, onAdd, employees = [], isM
     setLoading(true);
     setError("");
     const res = await onAdd({ title, userId: isManager ? selectedUserId : undefined });
-    if (res && res.error) setError(res.error); // Affiche l'erreur backend si présente
+    if (res && res.error) setError(res.error); 
     else {
       setTitle("");
       setSelectedUserId("");

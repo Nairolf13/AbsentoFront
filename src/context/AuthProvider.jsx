@@ -9,7 +9,6 @@ export function AuthProvider({ children }) {
   const [authError, setAuthError] = useState(null);
   const [token, setToken] = useState(null);
 
-  // Vérifie l'authentification à l'initialisation
   useEffect(() => {
     async function fetchProfile() {
       try {
@@ -27,9 +26,7 @@ export function AuthProvider({ children }) {
     fetchProfile();
   }, []);
 
-  const loginUser = async (email, password) => {
-    // login doit renvoyer le token JWT
-    await login(email, password); 
+  const loginUser = async (email, password) => {    await login(email, password); 
     const profile = await getUserProfile();
     setUser(profile);
     setAuthError(null);

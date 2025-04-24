@@ -5,7 +5,7 @@ import { addDays, startOfWeek, format, isSameDay } from 'date-fns';
 import { fetchEmployees } from '../../api/employees';
 import { fetchEmployeePlanning, setEmployeePlanning, deleteEmployeePlanning } from '../../api/planning';
 import { useAuth } from '../../context/AuthProvider';
-import ConfirmModal from '../ui/ConfirmModal'; // Importez votre composant ConfirmModal
+import ConfirmModal from '../ui/ConfirmModal'; 
 import TaskList from "./TaskList";
 import { ChevronLeftIcon, ChevronRightIcon, PlusIcon } from '@heroicons/react/24/outline';
 import ReactDOM from "react-dom";
@@ -204,7 +204,6 @@ export default function AbsenceCalendar() {
     startY: 0,
   });
 
-  // Gestion appui long pour sélection mobile, compatible multi-heures
   const longPressTimeout = React.useRef(null);
   const longPressTriggered = React.useRef(false);
 
@@ -226,18 +225,16 @@ export default function AbsenceCalendar() {
       setSelecting(true);
       setRangeStart({ dayIdx, hour });
       setRangeEnd({ dayIdx, hour });
-    }, 400); // 600ms : appui long plus réactif
+    }, 400);
   };
 
   const handleTouchMove = (e) => {
     if (e.touches.length > 1) return;
     if (!longPressTriggered.current) {
-      // Si on bouge avant 1s, annule la sélection et laisse le scroll natif
       clearTimeout(longPressTimeout.current);
       longPressTimeout.current = null;
       return;
     }
-    // Après appui long validé, comportement de sélection multi-heures
     const touch = e.touches[0];
     let el = document.elementFromPoint(touch.clientX, touch.clientY);
     while (el && (!el.getAttribute('data-day') || !el.getAttribute('data-hour')) && el.parentElement) {
@@ -249,7 +246,7 @@ export default function AbsenceCalendar() {
       if (touchState.current.selecting && dayIdx === touchState.current.dayIdx) {
         setRangeEnd({ dayIdx, hour });
         touchState.current.end = { dayIdx, hour };
-        e.preventDefault(); // Bloque le scroll dès qu'on glisse dans la colonne
+        e.preventDefault();
       }
     }
   };
@@ -283,9 +280,7 @@ export default function AbsenceCalendar() {
     touchState.current = { selecting: false, start: null, end: null, dayIdx: null, startX: 0, startY: 0 };
   };
 
-  // Gestion tactile pour mobile
   const getSlotFromTouch = (e) => {
-    // Trouve l'élément cible de la touche (div[data-day][data-hour])
     const touch = e.touches[0];
     const el = document.elementFromPoint(touch.clientX, touch.clientY);
     if (!el) return null;
@@ -297,7 +292,6 @@ export default function AbsenceCalendar() {
     return null;
   };
 
-  // Correction gestion tactile mobile : empêche le scroll et garantit la sélection
   const handleSlotMouseDown = (dayIdx, hour) => {
     setSelecting(true);
     setRangeStart({ dayIdx, hour });
@@ -315,7 +309,7 @@ export default function AbsenceCalendar() {
     if (rangeStart && rangeEnd) {
       setModalSlot({ dayIdx: rangeStart.dayIdx, start: Math.min(rangeStart.hour, rangeEnd.hour), end: Math.max(rangeStart.hour, rangeEnd.hour) });
       setTaskLabel("");
-      setTimeout(() => setModalOpen(true), 0); // Force l'ouverture après le render
+      setTimeout(() => setModalOpen(true), 0); 
     } else {
       setModalSlot(null);
       setTaskLabel("");
@@ -335,10 +329,8 @@ export default function AbsenceCalendar() {
     return hour >= minH && hour <= maxH;
   };
 
-  // 1. Ref pour le conteneur de grille mobile
   const mobileGridRef = React.useRef(null);
 
-  // 2. useEffect pour attacher le listener touchmove non passif
   useEffect(() => {
     const grid = mobileGridRef.current;
     if (!grid) return;

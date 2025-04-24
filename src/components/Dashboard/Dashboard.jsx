@@ -3,7 +3,7 @@ import Calendar from "./Calendar";
 import HistoriqueAbsences from "./HistoriqueAbsences";
 import RequestAbsenceForm from "../Absence/RequestAbsenceForm";
 import RemplacementSuggestPage from "../../pages/RemplacementSuggest";
-import RemplacementAdminTab from "./RemplacementAdminTab"; // Correction du chemin
+import RemplacementAdminTab from "./RemplacementAdminTab"; 
 import EmployeeDashboardTab from "../Employee/EmployeeDashboardTab";
 import TaskList from "./TaskList";
 import { useNavigate, useLocation, useParams, Outlet } from "react-router-dom";
@@ -36,14 +36,12 @@ const icons = {
 };
 
 export default function Dashboard() {
-  // TOUS les hooks d'abord, sans aucune condition ni return avant eux
   const { user } = useAuth();
   const location = useLocation();
   const { '*': subroute } = useParams();
   const navigate = useNavigate();
   const [burgerOpen, setBurgerOpen] = useState(false);
 
-  // Mapping entre clé d'onglet et sous-route
   const tabToRoute = {
     calendar: '',
     taches: 'taches',
@@ -62,10 +60,8 @@ export default function Dashboard() {
     employes: 'employes',
   };
 
-  // Onglet actif dérivé de l'URL uniquement
   const activeTab = routeToTab[(subroute || '').split('/')[0]] || 'calendar';
 
-  // Demande au Header de rafraîchir les notifications à chaque clic sur la sidebar
   const handleSidebarClick = (key) => {
     navigate(`/dashboard/${tabToRoute[key]}`);
     window.dispatchEvent(new CustomEvent("refreshNotifications"));
@@ -84,14 +80,12 @@ export default function Dashboard() {
     }
   }, [location.state, activeTab, navigate, location.pathname, location.key]);
 
-  // Correction : détecte bien l'onglet calendrier
   const isCalendarTab = activeTab === 'calendar';
 
   const sidebarItems = [
     { key: "calendar", label: "Calendrier", icon: icons.calendar },
     { key: "taches", label: "Mes tâches", icon: icons.tasks },
     { key: "absence", label: "Absence", icon: icons.absence },
-    // Onglet Remplacement visible uniquement pour ADMIN ou MANAGER
     ...(user && (user.role === "ADMIN" || user.role === "MANAGER") ? [{ key: "remplacement", label: "Remplacement", icon: icons.remplacement }] : []),
     { key: "historique", label: "Historique", icon: icons.history },
   ];

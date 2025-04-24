@@ -1,7 +1,6 @@
 import axios from 'axios';
 import { API_URL } from './config';
 
-// Sécurisation : trim email et password pour éviter les espaces involontaires
 export const login = async (email, password) => {
   const resp = await axios.post(`${API_URL}/auth/login`, {
     email: email.trim(),
@@ -9,7 +8,7 @@ export const login = async (email, password) => {
   }, {
     withCredentials: true
   });
-  return resp.data; // Retourne le token reçu
+  return resp.data;
 };
 
 export const logout = async () => {
@@ -115,7 +114,6 @@ export const getAllAbsences = async () => {
   return data;
 };
 
-// Ajoute une fonction pour récupérer le profil utilisateur complet
 export const getUserProfile = async () => {
   const { data } = await axios.get(`${API_URL}/utilisateur/me`, {
     withCredentials: true

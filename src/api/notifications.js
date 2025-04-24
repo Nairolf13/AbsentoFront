@@ -5,7 +5,6 @@ export async function getUserNotifications(userId) {
   const res = await axios.get(`${API_URL}/admin/notifications/${userId}`, {
     withCredentials: true
   });
-  // Sécurisation : retourne un tableau vide si la réponse n'est pas un tableau
   const data = res.data;
   return Array.isArray(data) ? data : [];
 }
