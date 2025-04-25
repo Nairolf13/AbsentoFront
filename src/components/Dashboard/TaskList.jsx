@@ -109,6 +109,7 @@ export default function TaskList() {
     });
     if (res.ok) {
       setTasks((ts) => ts.map((t) => (t.id === id ? { ...t, completed: !completed } : t)));
+      window.dispatchEvent(new CustomEvent("refreshTaskCounter"));
     }
   };
 

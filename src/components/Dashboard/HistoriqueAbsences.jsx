@@ -57,8 +57,19 @@ export default function HistoriqueAbsences() {
     try {
       const { absence } = await validateAbsence(id);
       setAbsences(absences => absences.map(a => a.id === id ? { ...a, status: absence.status } : a));
+      window.dispatchEvent(new CustomEvent("refreshAbsenceCounter"));
     } catch (e) {
       alert("Erreur lors de la validation : " + (e?.response?.data?.error || e.message));
+    }
+  };
+
+  const handleRefuse = async (id) => {
+    try {
+      const { absence } = await refuseAbsence(id);
+      setAbsences(absences => absences.map(a => a.id === id ? { ...a, status: absence.status } : a));
+      window.dispatchEvent(new CustomEvent("refreshAbsenceCounter"));
+    } catch (e) {
+      alert("Erreur lors du refus : " + (e?.response?.data?.error || e.message));
     }
   };
 
@@ -144,6 +155,7 @@ export default function HistoriqueAbsences() {
                       {(user?.role === "ADMIN" || user?.role === "RH" || user?.role === "MANAGER") && (
                         <td className="py-2 px-1 sm:px-3 whitespace-nowrap flex flex-col gap-2 sm:flex-row sm:gap-2 items-center justify-center">
                           <button className="bg-primary text-white rounded-xl px-2 sm:px-3 py-1 text-xs font-bold hover:bg-primary/80 transition w-full sm:w-auto" onClick={() => handleValidate(a.id)}>Valider</button>
+                          <button className="bg-red-500 text-white rounded-xl px-2 sm:px-3 py-1 text-xs font-bold hover:bg-red-500/80 transition w-full sm:w-auto" onClick={() => handleRefuse(a.id)}>Refuser</button>
                           <button className="bg-blue-500 text-white rounded-xl px-2 sm:px-3 py-1 text-xs font-bold hover:bg-blue-500/80 transition w-full sm:w-auto" onClick={() => handleOpenModifier(a)}>Modifier</button>
                         </td>
                       )}

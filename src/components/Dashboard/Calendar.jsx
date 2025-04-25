@@ -567,15 +567,17 @@ export default function AbsenceCalendar() {
             document.body
           )}
           {/* Modal de confirmation suppression */}
-          <ConfirmModal
-            open={modalDeleteOpen}
-            title="Supprimer la tâche ?"
-            message="Cette action est irréversible. Voulez-vous vraiment supprimer cette tâche du planning ?"
-            onConfirm={confirmDeleteTask}
-            onCancel={cancelDeleteTask}
-            confirmText="Supprimer"
-            cancelText="Annuler"
-          />
+          {ReactDOM.createPortal(
+            <ConfirmModal
+              open={modalDeleteOpen}
+              title="Supprimer la tâche ?"
+              message="Cette action est irréversible. Voulez-vous vraiment supprimer cette tâche du planning ?"
+              onConfirm={confirmDeleteTask}
+              onCancel={cancelDeleteTask}
+              confirmText="Supprimer"
+              cancelText="Annuler"
+            />, document.body
+          )}
         </main>
       </div>
     </div>

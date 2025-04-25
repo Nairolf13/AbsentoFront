@@ -39,7 +39,7 @@ export default function AddTaskModal({ open, onClose, onAdd, employees = [], isM
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+    <div className="fixed inset-0 z-[998] flex items-center justify-center bg-black/30">
       <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md relative">
         <button
           className="absolute top-2 right-2 text-gray-400 hover:text-primary text-xl"

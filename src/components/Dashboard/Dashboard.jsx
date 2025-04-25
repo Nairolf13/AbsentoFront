@@ -9,6 +9,8 @@ import TaskList from "./TaskList";
 import { useNavigate, useLocation, useParams, Outlet } from "react-router-dom";
 import { useAuth } from "../../context/AuthProvider";
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
+import { getAllAbsences } from "../../api/absento";
+import { API_URL } from "../../api/config";
 
 const icons = {
   calendar: (
@@ -41,6 +43,8 @@ export default function Dashboard() {
   const { '*': subroute } = useParams();
   const navigate = useNavigate();
   const [burgerOpen, setBurgerOpen] = useState(false);
+  const [absencesEnCours, setAbsencesEnCours] = useState(0);
+  const [tasksEnCours, setTasksEnCours] = useState(0);
 
   const tabToRoute = {
     calendar: '',
@@ -79,6 +83,38 @@ export default function Dashboard() {
       navigate(location.pathname, { replace: true, state: {} });
     }
   }, [location.state, activeTab, navigate, location.pathname, location.key]);
+
+  useEffect(() => {
+    async function fetchAbsences() {
+      try {
+        const absences = await getAllAbsences();
+        const enCours = absences.filter(a => a.status === "En attente" || a.status === "en attente" || a.status === "EN_ATTENTE" || a.statut === "En attente" || a.statut === "en attente" || a.statut === "EN_ATTENTE").length;
+        setAbsencesEnCours(enCours);
+      } catch (e) {
+        setAbsencesEnCours(0);
+      }
+    }
+    async function fetchTasks() {
+      try {
+        const res = await fetch(`${API_URL}/tasks`, { credentials: 'include' });
+        const tasks = await res.json();
+        const enCours = Array.isArray(tasks) ? tasks.filter(t => !t.completed).length : 0;
+        setTasksEnCours(enCours);
+      } catch (e) {
+        setTasksEnCours(0);
+      }
+    }
+    fetchAbsences();
+    fetchTasks();
+    const handlerAbs = () => fetchAbsences();
+    const handlerTasks = () => fetchTasks();
+    window.addEventListener("refreshAbsenceCounter", handlerAbs);
+    window.addEventListener("refreshTaskCounter", handlerTasks);
+    return () => {
+      window.removeEventListener("refreshAbsenceCounter", handlerAbs);
+      window.removeEventListener("refreshTaskCounter", handlerTasks);
+    };
+  }, []);
 
   const isCalendarTab = activeTab === 'calendar';
 
@@ -146,12 +182,12 @@ export default function Dashboard() {
         {/* KPI cards élargies sur toute la largeur */}
         <div className="flex gap-4 px-4 pt-6 w-full">
           <div className="flex-1 bg-white rounded-2xl p-5 flex flex-col items-center shadow border border-primary/30 min-w-0">
-            <div className="text-2xl font-bold text-secondary">45</div>
-            <div className="text-secondary mt-1 text-sm">Absences totales</div>
+            <div className="text-2xl font-bold text-secondary">{absencesEnCours}</div>
+            <div className="text-secondary mt-1 text-sm">Absences en cours</div>
           </div>
           <div className="flex-1 bg-white rounded-2xl p-5 flex flex-col items-center shadow border border-primary/30 min-w-0">
-            <div className="text-2xl font-bold text-secondary">706</div>
-            <div className="text-secondary mt-1 text-sm">Points d'attention</div>
+            <div className="text-2xl font-bold text-secondary">{tasksEnCours}</div>
+            <div className="text-secondary mt-1 text-sm">Tâches en cours</div>
           </div>
           <div className="flex-1 bg-white rounded-2xl p-5 flex flex-col items-center shadow border border-primary/30 min-w-0">
             <div className="text-2xl font-bold text-secondary">0</div>
@@ -204,12 +240,12 @@ export default function Dashboard() {
           {/* Stats cards */}
           <div className="flex gap-6 px-10 py-6">
             <div className="flex-1 bg-white rounded-2xl p-6 flex flex-col items-center shadow border border-primary/30">
-              <div className="text-3xl font-bold text-secondary">45</div>
-              <div className="text-secondary mt-2">Absences probables</div>
+              <div className="text-3xl font-bold text-secondary">{absencesEnCours}</div>
+              <div className="text-secondary mt-2">Absences en cours</div>
             </div>
             <div className="flex-1 bg-white rounded-2xl p-6 flex flex-col items-center shadow border border-primary/30">
-              <div className="text-3xl font-bold text-secondary">706</div>
-              <div className="text-secondary mt-2">Points d'attention</div>
+              <div className="text-3xl font-bold text-secondary">{tasksEnCours}</div>
+              <div className="text-secondary mt-2">Tâches en cours</div>
             </div>
             <div className="flex-1 bg-white rounded-2xl p-6 flex flex-col items-center shadow border border-primary/30">
               <div className="text-3xl font-bold text-secondary">0</div>
