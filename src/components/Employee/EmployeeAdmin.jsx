@@ -97,6 +97,8 @@ export default function EmployeeAdmin() {
     const validRows = [];
     const invalidRows = [];
     csvData.forEach(row => {
+      // Normalisation email CSV
+      if (row.email) row.email = row.email.trim().toLowerCase();
       const hasAllFields = requiredFields.every(f => row[f]);
       const dateObj = new Date(row.dateNaissance);
       if (!hasAllFields || isNaN(dateObj.getTime())) {
@@ -158,11 +160,12 @@ export default function EmployeeAdmin() {
       return;
     }
     try {
+      const normalizedForm = { ...singleForm, email: singleForm.email.trim().toLowerCase() };
       await fetch(`${import.meta.env.VITE_API_URL}/password/invite`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: 'include',
-        body: JSON.stringify([singleForm])
+        body: JSON.stringify([normalizedForm])
       });
       setSingleSuccess("Employé ajouté et mail d'invitation envoyé");
       setSingleForm({

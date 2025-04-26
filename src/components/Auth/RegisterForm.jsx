@@ -38,10 +38,10 @@ export default function RegisterForm() {
         taille,
         adresse: adresseEntreprise,
         telephone: telephoneEntreprise,
-        emailContact,
+        emailContact: emailContact.trim().toLowerCase(),
         responsableNom,
         responsablePrenom,
-        emailResponsable,
+        emailResponsable: emailResponsable.trim().toLowerCase(),
         motDePasse,
         dateNaissance
       });

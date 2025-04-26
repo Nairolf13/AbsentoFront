@@ -14,7 +14,8 @@ export default function LoginForm() {
     e.preventDefault();
     setError("");
     try {
-      await loginUser(email, password);
+      const normalizedEmail = email.trim().toLowerCase();
+      await loginUser(normalizedEmail, password);
       navigate("/dashboard");
     } catch (err) {
       setError("Identifiants invalides");
