@@ -3,6 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { registerEntreprise } from "../../api/absento";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 
+// Hook utilitaire pour détecter le mobile
+function useIsMobile() {
+  if (typeof window === 'undefined') return false;
+  return window.matchMedia('(max-width: 640px)').matches;
+}
+
 export default function RegisterForm() {
   const [nomEntreprise, setNomEntreprise] = useState("");
   const [siret, setSiret] = useState("");
@@ -22,6 +28,7 @@ export default function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -74,7 +81,38 @@ export default function RegisterForm() {
             <h3 className="text-lg font-semibold text-primary mb-2">Informations responsable</h3>
             <input type="text" placeholder="Nom du responsable" className="block w-full rounded-xl border border-primary px-4 py-3 mb-2 focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-700" value={responsableNom} onChange={e => setResponsableNom(e.target.value)} required />
             <input type="text" placeholder="Prénom du responsable" className="block w-full rounded-xl border border-primary px-4 py-3 mb-2 focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-700" value={responsablePrenom} onChange={e => setResponsablePrenom(e.target.value)} required />
-            <input type="date" placeholder="Date de naissance du responsable" className="block w-full rounded-xl border border-primary px-4 py-3 mb-2 focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-700" value={dateNaissance} onChange={e => setDateNaissance(e.target.value)} />
+            <label htmlFor="dateNaissance" className="block mb-1 text-secondary text-xs sm:text-sm text-center w-full">
+              Date de naissance du responsable
+            </label>
+            {isMobile ? (
+              <div className="relative w-full mb-2">
+                <input
+                  id="dateNaissance"
+                  type="date"
+                  className="block w-full rounded-xl border border-primary px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-700 bg-white appearance-none"
+                  value={dateNaissance}
+                  onChange={e => setDateNaissance(e.target.value)}
+                  required
+                />
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary pointer-events-none">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                </span>
+                {!dateNaissance && (
+                  <span className="absolute left-10 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none select-none">
+                    Sélectionner une date
+                  </span>
+                )}
+              </div>
+            ) : (
+              <input
+                id="dateNaissance"
+                type="date"
+                className="block w-full rounded-xl border border-primary px-4 py-3 mb-2 focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-700"
+                value={dateNaissance}
+                onChange={e => setDateNaissance(e.target.value)}
+                required
+              />
+            )}
             <input type="email" placeholder="Email du responsable" className="block w-full rounded-xl border border-primary px-4 py-3 mb-2 focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-700" value={emailResponsable} onChange={e => setEmailResponsable(e.target.value)} required />
             <div className="relative w-full mb-2">
               <input
