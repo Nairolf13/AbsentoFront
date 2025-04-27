@@ -40,8 +40,14 @@ export function AuthProvider({ children }) {
     setToken(null);
   };
 
+  const refreshUser = async () => {
+    const profile = await getUserProfile();
+    setUser(profile);
+    return profile;
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, loading, loginUser, logout, authError }}>
+    <AuthContext.Provider value={{ user, token, loading, loginUser, logout, authError, refreshUser }}>
       {loading ? (
         <div className="w-full h-screen flex items-center justify-center text-lg text-primary">
           Chargement de l'authentification...
