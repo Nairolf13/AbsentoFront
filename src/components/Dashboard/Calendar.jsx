@@ -356,6 +356,32 @@ export default function AbsenceCalendar() {
               <ChevronRightIcon className="w-6 h-6" />
             </button>
           </div>
+          {/* Sélecteur d'employé pour manager/rh/admin EN MOBILE */}
+          {user && ["ADMIN", "MANAGER", "RH"].includes(user.role) && (
+            <div className="mb-2 flex flex-col items-center">
+              <input
+                type="text"
+                className="mb-2 rounded border px-2 py-1 text-xs max-w-xs w-full"
+                placeholder="Rechercher un employé..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                style={{maxWidth: 320}}
+              />
+              <select
+                className="rounded border px-2 py-1 text-xs max-w-xs w-full"
+                value={selectedEmployeeId || ''}
+                onChange={e => setSelectedEmployeeId(e.target.value)}
+                disabled={loadingEmployees}
+                style={{maxWidth: 320}}
+              >
+                {filteredEmployees.map(emp => (
+                  <option key={emp.id} value={emp.id}>
+                    {emp.nom} {emp.prenom}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           {/* Jours de la semaine (compact, horizontal) */}
           <div className="flex w-full border-b border-accent mb-2">
             {days.map((date, idx) => (

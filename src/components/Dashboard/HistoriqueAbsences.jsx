@@ -111,59 +111,88 @@ export default function HistoriqueAbsences() {
           {absences.length === 0 ? (
             <div className="text-secondary text-center">Aucune absence soumise.</div>
           ) : (
-            <div className="w-full overflow-x-auto">
-              <table className="w-full bg-white border border-gray-200 rounded-xl text-xs sm:text-sm text-center">
-                <thead>
-                  <tr className="bg-accent text-secondary">
-                    <th className="py-2 px-1 sm:px-3">Date</th>
-                    <th className="py-2 px-1 sm:px-3">Début</th>
-                    <th className="py-2 px-1 sm:px-3">Fin</th>
-                    <th className="py-2 px-1 sm:px-3">Type</th>
-                    <th className="py-2 px-1 sm:px-3">Motif</th>
-                    <th className="py-2 px-1 sm:px-3">Statut</th>
-                    <th className="py-2 px-1 sm:px-3">Remplaçant</th>
-                    <th className="py-2 px-1 sm:px-3">Justificatif</th>
-                    {(user?.role === "ADMIN" || user?.role === "RH" || user?.role === "MANAGER") && <th className="py-2 px-1 sm:px-3">Actions</th>}
-                  </tr>
-                </thead>
-                <tbody>
-                  {absences.map((a) => (
-                    <tr key={a.id} className="border-b last:border-b-0 hover:bg-accent/40 transition">
-                      <td className="py-2 px-1 sm:px-3 whitespace-nowrap">{new Date(a.startDate).toLocaleDateString()}</td>
-                      <td className="py-2 px-1 sm:px-3 whitespace-nowrap">{new Date(a.startDate).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</td>
-                      <td className="py-2 px-1 sm:px-3 whitespace-nowrap">{new Date(a.endDate).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</td>
-                      <td className="py-2 px-1 sm:px-3 whitespace-nowrap">{a.type}</td>
-                      <td className="py-2 px-1 sm:px-3 whitespace-nowrap">{a.reason || "-"}</td>
-                      <td className="py-2 px-1 sm:px-3 whitespace-nowrap">
-                        <span className={`px-2 py-1 rounded-xl text-xs font-semibold ${statusColors[a.status] || "bg-gray-200 text-gray-700"}`}>{a.status}</span>
-                      </td>
-                      <td className="py-2 px-1 sm:px-3 whitespace-nowrap">
-                        {a.remplacement?.remplacant ? `${a.remplacement.remplacant.prenom} ${a.remplacement.remplacant.nom}` : "-"}
-                      </td>
-                      <td className="py-2 px-1 sm:px-3 whitespace-nowrap">
-                        {a.justificatifUrl ? (
-                          <button
-                            className="text-primary underline font-semibold"
-                            onClick={() => setJustificatifPreview(a.justificatifUrl)}
-                          >
-                            Voir
-                          </button>
-                        ) : (
-                          <span className="text-gray-400">-</span>
-                        )}
-                      </td>
-                      {(user?.role === "ADMIN" || user?.role === "RH" || user?.role === "MANAGER") && (
-                        <td className="py-2 px-1 sm:px-3 whitespace-nowrap flex flex-col gap-2 sm:flex-row sm:gap-2 items-center justify-center">
-                          <button className="bg-primary text-white rounded-xl px-2 sm:px-3 py-1 text-xs font-bold hover:bg-primary/80 transition w-full sm:w-auto" onClick={() => handleValidate(a.id)}>Valider</button>
-                          <button className="bg-red-500 text-white rounded-xl px-2 sm:px-3 py-1 text-xs font-bold hover:bg-red-500/80 transition w-full sm:w-auto" onClick={() => handleRefuse(a.id)}>Refuser</button>
-                          <button className="bg-blue-500 text-white rounded-xl px-2 sm:px-3 py-1 text-xs font-bold hover:bg-blue-500/80 transition w-full sm:w-auto" onClick={() => handleOpenModifier(a)}>Modifier</button>
-                        </td>
-                      )}
+            <>
+              {/* Table classique sur desktop/tablette */}
+              <div className="w-full overflow-x-auto hidden sm:block">
+                <table className="w-full bg-white border border-gray-200 rounded-xl text-xs sm:text-sm text-center">
+                  <thead>
+                    <tr className="bg-accent text-secondary">
+                      <th className="py-2 px-1 sm:px-3">Date</th>
+                      <th className="py-2 px-1 sm:px-3">Début</th>
+                      <th className="py-2 px-1 sm:px-3">Fin</th>
+                      <th className="py-2 px-1 sm:px-3">Type</th>
+                      <th className="py-2 px-1 sm:px-3">Motif</th>
+                      <th className="py-2 px-1 sm:px-3">Statut</th>
+                      <th className="py-2 px-1 sm:px-3">Remplaçant</th>
+                      <th className="py-2 px-1 sm:px-3">Justificatif</th>
+                      {(user?.role === "ADMIN" || user?.role === "RH" || user?.role === "MANAGER") && <th className="py-2 px-1 sm:px-3">Actions</th>}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {absences.map((a) => (
+                      <tr key={a.id} className="border-b last:border-b-0 hover:bg-accent/40 transition">
+                        <td className="py-2 px-1 sm:px-3 whitespace-nowrap">{new Date(a.startDate).toLocaleDateString()}</td>
+                        <td className="py-2 px-1 sm:px-3 whitespace-nowrap">{new Date(a.startDate).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</td>
+                        <td className="py-2 px-1 sm:px-3 whitespace-nowrap">{new Date(a.endDate).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</td>
+                        <td className="py-2 px-1 sm:px-3 whitespace-nowrap">{a.type}</td>
+                        <td className="py-2 px-1 sm:px-3 whitespace-nowrap">{a.reason || "-"}</td>
+                        <td className="py-2 px-1 sm:px-3 whitespace-nowrap">
+                          <span className={`px-2 py-1 rounded-xl text-xs font-semibold ${statusColors[a.status] || "bg-gray-200 text-gray-700"}`}>{a.status}</span>
+                        </td>
+                        <td className="py-2 px-1 sm:px-3 whitespace-nowrap">
+                          {a.remplacement?.remplacant ? `${a.remplacement.remplacant.prenom} ${a.remplacement.remplacant.nom}` : "-"}
+                        </td>
+                        <td className="py-2 px-1 sm:px-3 whitespace-nowrap">
+                          {a.justificatifUrl ? (
+                            <button
+                              className="text-primary underline font-semibold"
+                              onClick={() => setJustificatifPreview(a.justificatifUrl)}
+                            >
+                              Voir
+                            </button>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </td>
+                        {(user?.role === "ADMIN" || user?.role === "RH" || user?.role === "MANAGER") && (
+                          <td className="py-2 px-1 sm:px-3 whitespace-nowrap flex flex-col gap-2 sm:flex-row sm:gap-2 items-center justify-center">
+                            <button className="bg-primary text-white rounded-xl px-2 sm:px-3 py-1 text-xs font-bold hover:bg-primary/80 transition w-full sm:w-auto" onClick={() => handleValidate(a.id)}>Valider</button>
+                            <button className="bg-red-500 text-white rounded-xl px-2 sm:px-3 py-1 text-xs font-bold hover:bg-red-500/80 transition w-full sm:w-auto" onClick={() => handleRefuse(a.id)}>Refuser</button>
+                            <button className="bg-blue-500 text-white rounded-xl px-2 sm:px-3 py-1 text-xs font-bold hover:bg-blue-500/80 transition w-full sm:w-auto" onClick={() => handleOpenModifier(a)}>Modifier</button>
+                          </td>
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {/* Version mobile : cartes verticales */}
+              <div className="flex flex-col gap-4 w-full sm:hidden">
+                {absences.map((a) => (
+                  <div key={a.id} className="bg-accent/30 rounded-xl shadow p-3 flex flex-col gap-1 text-xs">
+                    <div className="flex justify-between"><span className="font-semibold">Date</span><span>{new Date(a.startDate).toLocaleDateString()}</span></div>
+                    <div className="flex justify-between"><span className="font-semibold">Début</span><span>{new Date(a.startDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span></div>
+                    <div className="flex justify-between"><span className="font-semibold">Fin</span><span>{new Date(a.endDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span></div>
+                    <div className="flex justify-between"><span className="font-semibold">Type</span><span>{a.type}</span></div>
+                    {/* Motif sur plusieurs lignes, bien lisible */}
+                    <div className="flex flex-col items-start">
+                      <span className="font-semibold">Motif</span>
+                      <span className="whitespace-pre-line break-words text-left w-full bg-white/60 rounded px-2 py-1 mt-1" style={{wordBreak: 'break-word', fontSize: '0.98em'}}>{a.reason || '-'}</span>
+                    </div>
+                    <div className="flex justify-between"><span className="font-semibold">Statut</span><span className={`px-2 py-1 rounded-xl text-xs font-semibold ${statusColors[a.status] || 'bg-gray-200 text-gray-700'}`}>{a.status}</span></div>
+                    <div className="flex justify-between"><span className="font-semibold">Remplaçant</span><span>{a.remplacement?.remplacant ? `${a.remplacement.remplacant.prenom} ${a.remplacement.remplacant.nom}` : '-'}</span></div>
+                    <div className="flex justify-between"><span className="font-semibold">Justificatif</span><span>{a.justificatifUrl ? (<button className="text-primary underline font-semibold" onClick={() => setJustificatifPreview(a.justificatifUrl)}>Voir</button>) : (<span className="text-gray-400">-</span>)}</span></div>
+                    {(user?.role === 'ADMIN' || user?.role === 'RH' || user?.role === 'MANAGER') && (
+                      <div className="flex flex-col gap-1 pt-1">
+                        <button className="bg-primary text-white rounded-xl px-2 py-1 text-xs font-bold hover:bg-primary/80 transition" onClick={() => handleValidate(a.id)}>Valider</button>
+                        <button className="bg-red-500 text-white rounded-xl px-2 py-1 text-xs font-bold hover:bg-red-500/80 transition" onClick={() => handleRefuse(a.id)}>Refuser</button>
+                        <button className="bg-blue-500 text-white rounded-xl px-2 py-1 text-xs font-bold hover:bg-blue-500/80 transition" onClick={() => handleOpenModifier(a)}>Modifier</button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </>
           )}
           {selectedAbsence && (
             <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex items-center justify-center px-2">

@@ -203,19 +203,19 @@ export default function Profile() {
   const isResponsable = user.poste && user.poste.toUpperCase() === "RESPONSABLE";
 
   return (
-    <div className="max-w-lg mx-auto bg-white rounded-xl shadow-md p-6 mt-8">
+    <div className="max-w-lg mx-auto bg-white rounded-xl shadow-md p-4 mt-4 sm:p-6 sm:mt-8 w-full max-h-[90vh] overflow-y-auto flex flex-col" style={{fontSize: '0.95rem'}}>
       {/* Titre général modal */}
-      <h1 className="text-3xl font-bold mb-6 text-center">Profil</h1>
+      <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-center">Profil</h1>
       {isResponsable && (
-        <div className="flex gap-4 mb-6 justify-center">
+        <div className="flex gap-2 sm:gap-4 mb-4 sm:mb-6 justify-center">
           <button
-            className={`px-4 py-2 rounded-lg font-semibold ${tab === "profil" ? "bg-primary text-white" : "bg-gray-100 text-primary"}`}
+            className={`px-2 sm:px-4 py-2 rounded-lg font-semibold ${tab === "profil" ? "bg-primary text-white" : "bg-gray-100 text-primary"}`}
             onClick={() => setTab("profil")}
           >
             Employé
           </button>
           <button
-            className={`px-4 py-2 rounded-lg font-semibold ${tab === "entreprise" ? "bg-primary text-white" : "bg-gray-100 text-primary"}`}
+            className={`px-2 sm:px-4 py-2 rounded-lg font-semibold ${tab === "entreprise" ? "bg-primary text-white" : "bg-gray-100 text-primary"}`}
             onClick={() => setTab("entreprise")}
           >
             Entreprise
@@ -224,7 +224,8 @@ export default function Profile() {
       )}
       {(!isResponsable || tab === "profil") && (
         <>
-          {/* On ne remet pas le titre ici, il est déjà en haut */}
+          {/* Nouveau titre pour la section employé */}
+          <h2 className="text-lg font-bold mb-3 text-primary text-center">Informations de l'employé</h2>
           {editUserMode ? (
             <form onSubmit={handleEditUserSubmit} className="space-y-2 text-lg">
               {editUserError && <div className="text-red-600 mb-2">{editUserError}</div>}
@@ -277,6 +278,7 @@ export default function Profile() {
             </form>
           ) : (
             <>
+              {/* Desktop/tablette : présentation classique */}
               <div className="space-y-2 text-lg">
                 <div><span className="font-semibold">Nom :</span> {user.nom}</div>
                 <div><span className="font-semibold">Prénom :</span> {user.prenom}</div>
@@ -312,10 +314,7 @@ export default function Profile() {
       )}
       {isResponsable && tab === "entreprise" && (
         <div>
-          <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v4a2 2 0 002 2h2a2 2 0 002-2V7m6 0v4a2 2 0 002 2h2a2 2 0 002-2V7M3 17v2a2 2 0 002 2h2a2 2 0 002-2v-2m6 0v2a2 2 0 002 2h2a2 2 0 002-2v-2" /></svg>
-            Informations sur l'entreprise
-          </h2>
+          <h2 className="text-lg font-bold mb-3 text-primary text-center">Informations de l'entreprise</h2>
           {loadingEntreprise ? (
             <div>Chargement...</div>
           ) : entreprise ? (

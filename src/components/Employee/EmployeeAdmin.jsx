@@ -265,43 +265,75 @@ export default function EmployeeAdmin() {
           ) : sortedEmployees.length === 0 ? (
             <div>Il n'y a pas d'employés à afficher.</div>
           ) : (
-            <table className="w-full bg-white border border-gray-200 rounded-xl text-sm">
-              <thead>
-                <tr>
-                  <th className="py-2 px-3 border-b">Nom</th>
-                  <th className="py-2 px-3 border-b">Prénom</th>
-                  <th className="py-2 px-3 border-b">Email</th>
-                  <th className="py-2 px-3 border-b">Téléphone</th>
-                  <th className="py-2 px-3 border-b">Poste</th>
-                  <th className="py-2 px-3 border-b">Rôle</th>
-                  <th className="py-2 px-3 border-b">Entreprise</th>
-                  <th className="py-2 px-3 border-b">Adresse</th>
-                  <th className="py-2 px-3 border-b">Date de naissance</th>
-                  <th className="py-2 px-3 border-b">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sortedEmployees.map(emp => (
-                  <tr key={emp.id} className="text-center">
-                    <td className="py-2 px-3 border-b whitespace-nowrap">{emp.nom}</td>
-                    <td className="py-2 px-3 border-b whitespace-nowrap">{emp.prenom}</td>
-                    <td className="py-2 px-3 border-b whitespace-nowrap">{emp.email}</td>
-                    <td className="py-2 px-3 border-b whitespace-nowrap">{emp.telephone}</td>
-                    <td className="py-2 px-3 border-b whitespace-nowrap">{emp.poste}</td>
-                    <td className="py-2 px-3 border-b whitespace-nowrap">{emp.role}</td>
-                    <td className="py-2 px-3 border-b whitespace-nowrap">{emp.entreprise?.nom}</td>
-                    <td className="py-2 px-3 border-b whitespace-nowrap">{emp.adresse}</td>
-                    <td className="py-2 px-3 border-b whitespace-nowrap">{emp.dateNaissance ? (typeof emp.dateNaissance === 'string' ? emp.dateNaissance.split('T')[0] : new Date(emp.dateNaissance).toISOString().split('T')[0]) : ''}</td>
-                    <td className="py-2 px-3 border-b">
-                      <div className="flex flex-row justify-center gap-2">
-                        <button className="bg-yellow-400 hover:bg-yellow-500 text-white font-bold px-3 py-1 rounded" onClick={() => handleEdit(emp)}>Modifier</button>
-                        <button className="bg-red-500 hover:bg-red-600 text-white font-bold px-3 py-1 rounded" onClick={() => handleDelete(emp)}>Supprimer</button>
-                      </div>
-                    </td>
+            <div className="flex flex-col gap-4 w-full sm:hidden">
+              {sortedEmployees.map(emp => (
+                <div key={emp.id} className="bg-accent/30 rounded-xl shadow p-3 flex flex-col gap-1 text-xs">
+                  <div className="flex justify-between"><span className="font-semibold">Nom</span><span>{emp.nom}</span></div>
+                  <div className="flex justify-between"><span className="font-semibold">Prénom</span><span>{emp.prenom}</span></div>
+                  <div className="flex justify-between"><span className="font-semibold">Email</span><span>{emp.email}</span></div>
+                  <div className="flex justify-between"><span className="font-semibold">Téléphone</span><span>{emp.telephone}</span></div>
+                  <div className="flex justify-between"><span className="font-semibold">Poste</span><span>{emp.poste}</span></div>
+                  <div className="flex justify-between"><span className="font-semibold">Rôle</span><span>{emp.role}</span></div>
+                  <div className="flex justify-between"><span className="font-semibold">Entreprise</span><span>{emp.entreprise?.nom}</span></div>
+                  <div className="flex flex-col items-start">
+                    <span className="font-semibold">Adresse</span>
+                    <span className="whitespace-pre-line break-words text-left w-full bg-white/60 rounded px-2 py-1 mt-1" style={{wordBreak: 'break-word', fontSize: '0.98em'}}>{emp.adresse}</span>
+                  </div>
+                  <div className="flex justify-between"><span className="font-semibold">Date de naissance</span><span>{emp.dateNaissance ? (typeof emp.dateNaissance === 'string' ? emp.dateNaissance.split('T')[0] : new Date(emp.dateNaissance).toISOString().split('T')[0]) : ''}</span></div>
+                  <div className="flex flex-col gap-1 pt-1">
+                    <button className="bg-yellow-400 hover:bg-yellow-500 text-white font-bold px-3 py-1 rounded" onClick={() => handleEdit(emp)}>Modifier</button>
+                    <button className="bg-red-500 hover:bg-red-600 text-white font-bold px-3 py-1 rounded" onClick={() => handleDelete(emp)}>Supprimer</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          {loadingEmployees ? (
+            <div>Chargement…</div>
+          ) : errorEmployees ? (
+            <div className="text-red-500 text-center">{errorEmployees}</div>
+          ) : sortedEmployees.length === 0 ? (
+            <div>Il n'y a pas d'employés à afficher.</div>
+          ) : (
+            <div className="hidden sm:block">
+              <table className="w-full bg-white border border-gray-200 rounded-xl text-sm">
+                <thead>
+                  <tr>
+                    <th className="py-2 px-3 border-b">Nom</th>
+                    <th className="py-2 px-3 border-b">Prénom</th>
+                    <th className="py-2 px-3 border-b">Email</th>
+                    <th className="py-2 px-3 border-b">Téléphone</th>
+                    <th className="py-2 px-3 border-b">Poste</th>
+                    <th className="py-2 px-3 border-b">Rôle</th>
+                    <th className="py-2 px-3 border-b">Entreprise</th>
+                    <th className="py-2 px-3 border-b">Adresse</th>
+                    <th className="py-2 px-3 border-b">Date de naissance</th>
+                    <th className="py-2 px-3 border-b">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {sortedEmployees.map(emp => (
+                    <tr key={emp.id} className="text-center">
+                      <td className="py-2 px-3 border-b whitespace-nowrap">{emp.nom}</td>
+                      <td className="py-2 px-3 border-b whitespace-nowrap">{emp.prenom}</td>
+                      <td className="py-2 px-3 border-b whitespace-nowrap">{emp.email}</td>
+                      <td className="py-2 px-3 border-b whitespace-nowrap">{emp.telephone}</td>
+                      <td className="py-2 px-3 border-b whitespace-nowrap">{emp.poste}</td>
+                      <td className="py-2 px-3 border-b whitespace-nowrap">{emp.role}</td>
+                      <td className="py-2 px-3 border-b whitespace-nowrap">{emp.entreprise?.nom}</td>
+                      <td className="py-2 px-3 border-b whitespace-nowrap">{emp.adresse}</td>
+                      <td className="py-2 px-3 border-b whitespace-nowrap">{emp.dateNaissance ? (typeof emp.dateNaissance === 'string' ? emp.dateNaissance.split('T')[0] : new Date(emp.dateNaissance).toISOString().split('T')[0]) : ''}</td>
+                      <td className="py-2 px-3 border-b">
+                        <div className="flex flex-row justify-center gap-2">
+                          <button className="bg-yellow-400 hover:bg-yellow-500 text-white font-bold px-3 py-1 rounded" onClick={() => handleEdit(emp)}>Modifier</button>
+                          <button className="bg-red-500 hover:bg-red-600 text-white font-bold px-3 py-1 rounded" onClick={() => handleDelete(emp)}>Supprimer</button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
         {/* Overlay du formulaire d'ajout (manuel + CSV) */}
@@ -612,7 +644,7 @@ export default function EmployeeAdmin() {
                 <option value="ADMIN">Admin</option>
               </select>
               <input type="date" value={editEmp.dateNaissance ? (typeof editEmp.dateNaissance === 'string' ? editEmp.dateNaissance.split('T')[0] : new Date(editEmp.dateNaissance).toISOString().split('T')[0]) : ''} onChange={e => setEditEmp(emp => ({ ...emp, dateNaissance: e.target.value }))} className="block w-full rounded-xl border border-primary px-4 py-3" required />
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-1 pt-1">
                 <button type="submit" className="bg-primary text-white font-bold px-6 py-2 rounded-xl hover:bg-primary/80 transition" disabled={editLoading}>Enregistrer</button>
                 <button type="button" className="bg-gray-300 text-gray-700 font-bold px-6 py-2 rounded-xl hover:bg-gray-400 transition" onClick={() => setEditEmp(null)}>Annuler</button>
               </div>
