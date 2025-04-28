@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { getMyAbsences, getAllAbsences, validateAbsence, refuseAbsence } from "../../api/absento";
+import { getMyAbsences, getAllAbsences, validateAbsence, refuseAbsence, deleteAbsence } from "../../api/absento";
 import { fetchEmployees } from "../../api/employees";
 import { proposerRemplacant } from "../../api/remplacement";
 import { useAuth } from "../../context/AuthProvider";
+import ConfirmModal from "../ui/ConfirmModal";
 
 const statusColors = {
   "En attente": "bg-yellow-300 text-yellow-900",
@@ -38,6 +39,8 @@ export default function HistoriqueAbsences() {
   const [actionLoading, setActionLoading] = useState(false);
   const [employees, setEmployees] = useState([]);
   const [justificatifPreview, setJustificatifPreview] = useState(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -100,6 +103,20 @@ export default function HistoriqueAbsences() {
     }
   };
 
+  const handleDeleteAbsence = async (id) => {
+    setDeleteLoading(true);
+    try {
+      await deleteAbsence(id);
+      setAbsences(absences => absences.filter(a => a.id !== id));
+      window.dispatchEvent(new CustomEvent("refreshAbsenceCounter"));
+    } catch (e) {
+      alert("Erreur lors de la suppression : " + (e?.response?.data?.error || e.message));
+    } finally {
+      setDeleteLoading(false);
+      setConfirmDeleteId(null);
+    }
+  };
+
   if (loading) return <div className="text-center text-secondary py-8">Chargement…</div>;
   if (error) return <div className="text-center text-red-500 py-8">Erreur lors du chargement</div>;
 
@@ -159,6 +176,7 @@ export default function HistoriqueAbsences() {
                             <button className="bg-primary text-white rounded-xl px-2 sm:px-3 py-1 text-xs font-bold hover:bg-primary/80 transition w-full sm:w-auto" onClick={() => handleValidate(a.id)}>Valider</button>
                             <button className="bg-red-500 text-white rounded-xl px-2 sm:px-3 py-1 text-xs font-bold hover:bg-red-500/80 transition w-full sm:w-auto" onClick={() => handleRefuse(a.id)}>Refuser</button>
                             <button className="bg-blue-500 text-white rounded-xl px-2 sm:px-3 py-1 text-xs font-bold hover:bg-blue-500/80 transition w-full sm:w-auto" onClick={() => handleOpenModifier(a)}>Modifier</button>
+                            <button className="bg-gray-700 text-white rounded-xl px-2 sm:px-3 py-1 text-xs font-bold hover:bg-gray-700/80 transition w-full sm:w-auto" onClick={() => setConfirmDeleteId(a.id)}>Supprimer</button>
                           </td>
                         )}
                       </tr>
@@ -187,6 +205,7 @@ export default function HistoriqueAbsences() {
                         <button className="bg-primary text-white rounded-xl px-2 py-1 text-xs font-bold hover:bg-primary/80 transition" onClick={() => handleValidate(a.id)}>Valider</button>
                         <button className="bg-red-500 text-white rounded-xl px-2 py-1 text-xs font-bold hover:bg-red-500/80 transition" onClick={() => handleRefuse(a.id)}>Refuser</button>
                         <button className="bg-blue-500 text-white rounded-xl px-2 py-1 text-xs font-bold hover:bg-blue-500/80 transition" onClick={() => handleOpenModifier(a)}>Modifier</button>
+                        <button className="bg-gray-700 text-white rounded-xl px-2 py-1 text-xs font-bold hover:bg-gray-700/80 transition" onClick={() => setConfirmDeleteId(a.id)}>Supprimer</button>
                       </div>
                     )}
                   </div>
@@ -244,6 +263,17 @@ export default function HistoriqueAbsences() {
                 </a>
               </div>
             </div>
+          )}
+          {confirmDeleteId && (
+            <ConfirmModal
+              open={!!confirmDeleteId}
+              title="Confirmation de suppression"
+              message="Voulez-vous vraiment supprimer cette absence ? Cette action est irréversible."
+              onConfirm={() => handleDeleteAbsence(confirmDeleteId)}
+              onCancel={() => setConfirmDeleteId(null)}
+              confirmText={deleteLoading ? "Suppression..." : "Supprimer"}
+              cancelText="Annuler"
+            />
           )}
         </div>
       </div>

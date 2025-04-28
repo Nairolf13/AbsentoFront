@@ -9,6 +9,7 @@ import ConfirmModal from '../ui/ConfirmModal';
 import TaskList from "./TaskList";
 import { ChevronLeftIcon, ChevronRightIcon, PlusIcon } from '@heroicons/react/24/outline';
 import ReactDOM from "react-dom";
+import useSocket from '../../hooks/useSocket';
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const DAYS = ["Lun.", "Mar.", "Mer.", "Jeu.", "Ven.", "Sam.", "Dim."];
@@ -87,6 +88,33 @@ export default function AbsenceCalendar() {
     }
     loadPlanning();
   }, [selectedEmployeeId, weekStart]);
+
+  useSocket((event, payload) => {
+    if (event === 'absence:created' || event === 'absence:updated' || event === 'absence:deleted') {
+      // Recharge le planning à la réception d'une absence modifiée
+      if (selectedEmployeeId) {
+        const from = format(weekStart, 'yyyy-MM-dd');
+        const to = format(addDays(weekStart, 6), 'yyyy-MM-dd');
+        fetchEmployeePlanning(selectedEmployeeId, from, to)
+          .then(planning => {
+            setEvents(
+              planning
+                .filter(ev => ev.label && ev.label.trim() !== "")
+                .map(ev => {
+                  const d = new Date(ev.date);
+                  return {
+                    id: ev.id,
+                    day: d.getDay() === 0 ? 6 : d.getDay() - 1,
+                    hour: d.getHours(),
+                    label: ev.label,
+                    color: "bg-primary"
+                  }
+                })
+            );
+          });
+      }
+    }
+  });
 
   const handleSaveTask = async () => {
     if (modalSlot && taskLabel.trim()) {

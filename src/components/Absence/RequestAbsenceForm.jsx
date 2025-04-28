@@ -23,6 +23,8 @@ export default function RequestAbsenceForm() {
     try {
       await requestAbsence({ dateDebut, heureDebut, dateFin, heureFin, type, motif, justificatif }, token);
       setSuccess("Demande d'absence envoyée !");
+      // Mise à jour immédiate du compteur d'absences en cours
+      window.dispatchEvent(new CustomEvent("refreshAbsenceCounter"));
       setTimeout(() => {
         navigate("/dashboard", { replace: true, state: { openTab: "calendar", showAbsenceNotif: true } });
       }, 800);

@@ -99,6 +99,13 @@ export const refuseAbsence = async (absenceId) => {
   return data;
 };
 
+export const deleteAbsence = async (absenceId) => {
+  const { data } = await axios.delete(`${API_URL}/absences/${absenceId}`, {
+    withCredentials: true
+  });
+  return data;
+};
+
 export const getAbsencesSansRemplacant = async (token) => {
   const { data } = await axios.get(`${API_URL}/absences/sans-remplacant`, {
     headers: { Authorization: `Bearer ${token}` },

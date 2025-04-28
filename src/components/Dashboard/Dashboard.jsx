@@ -11,6 +11,7 @@ import { useAuth } from "../../context/AuthProvider";
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 import { getAllAbsences } from "../../api/absento";
 import { API_URL } from "../../api/config";
+import useSocket from '../../hooks/useSocket';
 
 const icons = {
   calendar: (
@@ -128,6 +129,12 @@ export default function Dashboard() {
   if (user && user.role === "ADMIN") {
     sidebarItems.push({ key: "employes", label: "Employés", icon: icons.users });
   }
+
+  useSocket((event) => {
+    if (["absence:created", "absence:updated", "absence:deleted"].includes(event)) {
+      window.dispatchEvent(new CustomEvent("refreshAbsenceCounter"));
+    }
+  });
 
   return (
     <div className="h-screen w-full">

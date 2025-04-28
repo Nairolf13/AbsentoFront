@@ -90,12 +90,6 @@ export default function Header() {
     <header className="bg-white shadow flex items-center justify-between px-6 py-4 rounded-b-2xl mb-8 relative">
       <Link to="/" className="text-xl font-bold text-primary">Absento</Link>
       <nav className="flex gap-4 items-center">
-        {/* <Link to="/remplacement-admin" className="flex items-center px-3 py-2 rounded-xl hover:bg-primary/10 transition font-semibold text-primary">
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 01-8 0m8 0V5a4 4 0 10-8 0v2m8 0a4 4 0 01-8 0M4 15h16M4 19h16" />
-          </svg>
-          Remplacements
-        </Link> */}
         <Link to="#" onClick={e => { e.preventDefault(); setProfileOpen(true); }} className="flex items-center px-1 py-1 rounded hover:bg-gray-100 transition">
           <svg xmlns="http://www.w3.org/2000/svg" className="w-7 h-7 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5.121 17.804A13.937 13.937 0 0112 15c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
