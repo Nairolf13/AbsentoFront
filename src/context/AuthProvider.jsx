@@ -17,8 +17,9 @@ export function AuthProvider({ children }) {
         const profile = await getUserProfile();
         setUser(profile);
       } catch (err) {
+        // Si erreur 401 (non connecté), on ne bloque pas l'UI
         setUser(null);
-        setAuthError(null); 
+        setAuthError(null);
       } finally {
         setLoading(false);
       }
@@ -26,7 +27,8 @@ export function AuthProvider({ children }) {
     fetchProfile();
   }, []);
 
-  const loginUser = async (email, password) => {    await login(email, password); 
+  const loginUser = async (email, password) => {
+    await login(email, password);
     const profile = await getUserProfile();
     setUser(profile);
     setAuthError(null);
@@ -46,15 +48,12 @@ export function AuthProvider({ children }) {
     return profile;
   };
 
+  // On n'affiche pas un écran de chargement bloquant sur les pages publiques
+  // Si besoin, tu peux personnaliser ce comportement ici
+
   return (
     <AuthContext.Provider value={{ user, token, loading, loginUser, logout, authError, refreshUser }}>
-      {loading ? (
-        <div className="w-full h-screen flex items-center justify-center text-lg text-primary">
-          Chargement de l'authentification...
-        </div>
-      ) : (
-        children
-      )}
+      {children}
     </AuthContext.Provider>
   );
 }

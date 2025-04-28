@@ -3,6 +3,26 @@ import { useNavigate } from "react-router-dom";
 import { registerEntreprise } from "../../api/absento";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 
+// Regex de validation pour chaque champ
+const regex = {
+  nomEntreprise: /^[A-Za-z0-9À-ÿ' -]{2,100}$/,
+  siret: /^\d{14}$/,
+  adresseEntreprise: /^.{5,100}$/,
+  telephoneEntreprise: /^\+?\d{10,15}$/,
+  emailContact: /^[\w-.]+@[\w-]+\.[a-z]{2,}$/i,
+  responsableNom: /^[A-Za-zÀ-ÿ' -]{2,50}$/,
+  responsablePrenom: /^[A-Za-zÀ-ÿ' -]{2,50}$/,
+  emailResponsable: /^[\w-.]+@[\w-]+\.[a-z]{2,}$/i,
+  motDePasse: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-={}:;"',.<>/?]).{8,}$/
+};
+
+function validateDateNaissance(dateString) {
+  const date = new Date(dateString);
+  const now = new Date();
+  const age = now.getFullYear() - date.getFullYear();
+  return !isNaN(date) && age >= 18;
+}
+
 // Hook utilitaire pour détecter le mobile
 function useIsMobile() {
   if (typeof window === 'undefined') return false;
@@ -30,11 +50,28 @@ export default function RegisterForm() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
+  // Validation de tous les champs avec regex
+  function validateAllFields() {
+    if (!regex.nomEntreprise.test(nomEntreprise)) return "Nom d'entreprise invalide (lettres, chiffres, 2-100 caractères)";
+    if (!regex.siret.test(siret)) return "SIRET invalide (14 chiffres)";
+    if (!regex.adresseEntreprise.test(adresseEntreprise)) return "Adresse invalide (5 à 100 caractères)";
+    if (!regex.telephoneEntreprise.test(telephoneEntreprise)) return "Téléphone invalide (10 à 15 chiffres)";
+    if (!regex.emailContact.test(emailContact)) return "Email de contact invalide";
+    if (!regex.responsableNom.test(responsableNom)) return "Nom du responsable invalide (lettres, 2-50 caractères)";
+    if (!regex.responsablePrenom.test(responsablePrenom)) return "Prénom du responsable invalide (lettres, 2-50 caractères)";
+    if (!regex.emailResponsable.test(emailResponsable)) return "Email du responsable invalide";
+    if (!regex.motDePasse.test(motDePasse)) return "Mot de passe trop faible (8 caractères, majuscule, minuscule, chiffre, spécial)";
+    if (!validateDateNaissance(dateNaissance)) return "Date de naissance invalide ou moins de 18 ans";
+    if (motDePasse !== confirmPassword) return "Les mots de passe ne correspondent pas.";
+    return null;
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(""); setSuccess("");
-    if (motDePasse !== confirmPassword) {
-      setError("Les mots de passe ne correspondent pas.");
+    const validationError = validateAllFields();
+    if (validationError) {
+      setError(validationError);
       return;
     }
     try {
@@ -50,12 +87,12 @@ export default function RegisterForm() {
         responsablePrenom,
         emailResponsable: emailResponsable.trim().toLowerCase(),
         motDePasse,
-        dateNaissance
+        dateNaissance,
       });
-      setSuccess("Entreprise créée ! Vous pouvez vous connecter.");
-      setTimeout(() => navigate("/login"), 1500);
+      setSuccess("Inscription réussie ! Vous pouvez maintenant vous connecter.");
+      setTimeout(() => navigate("/login"), 2000);
     } catch (err) {
-      setError(err.response?.data?.error || "Registration failed");
+      setError(err?.response?.data?.error || "Erreur lors de l'inscription");
     }
   };
 
@@ -67,20 +104,20 @@ export default function RegisterForm() {
           {/* Section Informations entreprise */}
           <div className="w-full mb-6">
             <h3 className="text-lg font-semibold text-primary mb-2">Informations entreprise</h3>
-            <input type="text" placeholder="Nom de l'entreprise" className="block w-full rounded-xl border border-primary px-4 py-3 mb-2 focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-700" value={nomEntreprise} onChange={e => setNomEntreprise(e.target.value)} required />
-            <input type="text" placeholder="SIRET" className="block w-full rounded-xl border border-primary px-4 py-3 mb-2 focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-700" value={siret} onChange={e => setSiret(e.target.value)} required />
-            <input type="text" placeholder="Secteur (optionnel)" className="block w-full rounded-xl border border-primary px-4 py-3 mb-2 focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-700" value={secteur} onChange={e => setSecteur(e.target.value)} />
-            <input type="text" placeholder="Taille (optionnel)" className="block w-full rounded-xl border border-primary px-4 py-3 mb-2 focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-700" value={taille} onChange={e => setTaille(e.target.value)} />
-            <input type="text" placeholder="Adresse de l'entreprise" className="block w-full rounded-xl border border-primary px-4 py-3 mb-2 focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-700" value={adresseEntreprise} onChange={e => setAdresseEntreprise(e.target.value)} required />
-            <input type="text" placeholder="Téléphone entreprise" className="block w-full rounded-xl border border-primary px-4 py-3 mb-2 focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-700" value={telephoneEntreprise} onChange={e => setTelephoneEntreprise(e.target.value)} />
-            <input type="email" placeholder="Email de contact entreprise" className="block w-full rounded-xl border border-primary px-4 py-3 mb-2 focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-700" value={emailContact} onChange={e => setEmailContact(e.target.value)} required />
+            <input type="text" placeholder="Nom de l'entreprise" className="block w-full rounded-xl border border-primary px-4 py-3 mb-1 focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-700" value={nomEntreprise} onChange={e => setNomEntreprise(e.target.value)} required />
+            <input type="text" placeholder="SIRET (14 chiffres)" className="block w-full rounded-xl border border-primary px-4 py-3 mb-1 focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-700" value={siret} onChange={e => setSiret(e.target.value)} required />
+            <input type="text" placeholder="Secteur (optionnel)" className="block w-full rounded-xl border border-primary px-4 py-3 mb-1 focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-700" value={secteur} onChange={e => setSecteur(e.target.value)} />
+            <input type="text" placeholder="Taille (optionnel)" className="block w-full rounded-xl border border-primary px-4 py-3 mb-1 focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-700" value={taille} onChange={e => setTaille(e.target.value)} />
+            <input type="text" placeholder="Adresse de l'entreprise" className="block w-full rounded-xl border border-primary px-4 py-3 mb-1 focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-700" value={adresseEntreprise} onChange={e => setAdresseEntreprise(e.target.value)} required />
+            <input type="text" placeholder="Téléphone entreprise" className="block w-full rounded-xl border border-primary px-4 py-3 mb-1 focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-700" value={telephoneEntreprise} onChange={e => setTelephoneEntreprise(e.target.value)} />
+            <input type="email" placeholder="Email de contact entreprise" className="block w-full rounded-xl border border-primary px-4 py-3 mb-1 focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-700" value={emailContact} onChange={e => setEmailContact(e.target.value)} required />
           </div>
 
           {/* Section Informations responsable */}
           <div className="w-full mb-6">
             <h3 className="text-lg font-semibold text-primary mb-2">Informations responsable</h3>
-            <input type="text" placeholder="Nom du responsable" className="block w-full rounded-xl border border-primary px-4 py-3 mb-2 focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-700" value={responsableNom} onChange={e => setResponsableNom(e.target.value)} required />
-            <input type="text" placeholder="Prénom du responsable" className="block w-full rounded-xl border border-primary px-4 py-3 mb-2 focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-700" value={responsablePrenom} onChange={e => setResponsablePrenom(e.target.value)} required />
+            <input type="text" placeholder="Nom du responsable" className="block w-full rounded-xl border border-primary px-4 py-3 mb-1 focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-700" value={responsableNom} onChange={e => setResponsableNom(e.target.value)} required />
+            <input type="text" placeholder="Prénom du responsable" className="block w-full rounded-xl border border-primary px-4 py-3 mb-1 focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-700" value={responsablePrenom} onChange={e => setResponsablePrenom(e.target.value)} required />
             <label htmlFor="dateNaissance" className="block mb-1 text-secondary text-xs sm:text-sm text-center w-full">
               Date de naissance du responsable
             </label>
@@ -113,7 +150,7 @@ export default function RegisterForm() {
                 required
               />
             )}
-            <input type="email" placeholder="Email du responsable" className="block w-full rounded-xl border border-primary px-4 py-3 mb-2 focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-700" value={emailResponsable} onChange={e => setEmailResponsable(e.target.value)} required />
+            <input type="email" placeholder="Email du responsable" className="block w-full rounded-xl border border-primary px-4 py-3 mb-1 focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-700" value={emailResponsable} onChange={e => setEmailResponsable(e.target.value)} required />
             <div className="relative w-full mb-2">
               <input
                 type={showPassword ? "text" : "password"}
@@ -125,13 +162,14 @@ export default function RegisterForm() {
               />
               <button
                 type="button"
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-secondary"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-primary"
+                onClick={() => setShowPassword(!showPassword)}
                 tabIndex={-1}
-                onClick={() => setShowPassword(v => !v)}
               >
-                {showPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
               </button>
             </div>
+            <span className="text-xs text-gray-500 mb-2 block">8+ caractères, majuscule, minuscule, chiffre, spécial</span>
             <div className="relative w-full mb-2">
               <input
                 type={showConfirmPassword ? "text" : "password"}
@@ -143,11 +181,11 @@ export default function RegisterForm() {
               />
               <button
                 type="button"
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-secondary"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-primary"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 tabIndex={-1}
-                onClick={() => setShowConfirmPassword(v => !v)}
               >
-                {showConfirmPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
+                {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
               </button>
             </div>
           </div>
