@@ -12,7 +12,6 @@ export default function Profile() {
   const [deleteError, setDeleteError] = useState(null);
   const [deleteSuccess, setDeleteSuccess] = useState(false);
   const [editMode, setEditMode] = useState(false);
-  // Initialisation toujours avec des strings vides pour l'entreprise
   const [editValues, setEditValues] = useState({
     nom: "",
     siret: "",
@@ -48,21 +47,23 @@ export default function Profile() {
   const [editUserPasswordError, setEditUserPasswordError] = useState(null);
   const [editUserSuccess, setEditUserSuccess] = useState(false);
 
-  // Fonction pour réinitialiser proprement les valeurs après édition ou annulation
   const resetEditUserValues = () => {
     setEditUserValues({
       nom: user?.nom || "",
       prenom: user?.prenom || "",
       email: user?.email || "",
       telephone: user?.telephone || "",
-      dateNaissance: user?.dateNaissance || "",
+      dateNaissance: user?.dateNaissance ? (
+        user.dateNaissance.includes('T') ? 
+          user.dateNaissance.split('T')[0] : 
+          user.dateNaissance
+      ) : "",
       adresse: user?.adresse || "",
       poste: user?.poste || "",
       role: user?.role || ""
     });
   };
 
-  // Fonction pour réinitialiser proprement les valeurs d'entreprise
   const resetEntrepriseValues = (entreprise) => {
     setEditValues({
       nom: entreprise?.nom || "",
@@ -85,7 +86,6 @@ export default function Profile() {
         .then(setEntreprise)
         .finally(() => setLoadingEntreprise(false));
     }
-    // Synchronise editUserValues à chaque changement de user
     if (user) {
       resetEditUserValues();
     }
@@ -113,7 +113,6 @@ export default function Profile() {
     setEditError(null);
     try {
       await updateEntreprise(entreprise.id, editValues);
-      // Recharge les infos à jour
       const updated = await getEntreprise(entreprise.id);
       setEntreprise(updated);
       setEditMode(false);
@@ -135,7 +134,6 @@ export default function Profile() {
     setEditUserError(null);
     setEditUserSuccess(false);
     try {
-      // Validation mot de passe si modifié
       let motDePasse = undefined;
       if (editUserPassword || editUserPasswordConfirm) {
         if (editUserPassword !== editUserPasswordConfirm) {
@@ -150,12 +148,18 @@ export default function Profile() {
         }
         motDePasse = editUserPassword;
       }
+      
+      let formattedDateNaissance = editUserValues.dateNaissance || "";
+      if (formattedDateNaissance && formattedDateNaissance.includes('T')) {
+        formattedDateNaissance = formattedDateNaissance.split('T')[0];
+      }
+      
       const payload = {
         nom: editUserValues.nom || "",
         prenom: editUserValues.prenom || "",
         email: editUserValues.email || "",
         telephone: editUserValues.telephone || "",
-        dateNaissance: editUserValues.dateNaissance || "",
+        dateNaissance: formattedDateNaissance,
         adresse: editUserValues.adresse || "",
         poste: editUserValues.poste || "",
         role: editUserValues.role || ""
@@ -163,7 +167,6 @@ export default function Profile() {
       if (motDePasse) payload.motDePasse = motDePasse;
       await updateUser(user.id, payload);
       setEditUserSuccess(true);
-      // Ne tente le login automatique que si le mot de passe a été modifié
       if (motDePasse) {
         await loginUser(payload.email || user.email, motDePasse);
       } else {
@@ -199,7 +202,6 @@ export default function Profile() {
 
   if (!user) return <div>Chargement...</div>;
 
-  // Onglets seulement si le poste est RESPONSABLE
   const isResponsable = user.poste && user.poste.toUpperCase() === "RESPONSABLE";
 
   return (
@@ -249,7 +251,19 @@ export default function Profile() {
               </div>
               <div>
                 <label className="font-semibold">Date de naissance : </label>
-                <input name="dateNaissance" type="date" value={editUserValues.dateNaissance || ""} onChange={handleEditUserChange} className="border rounded px-2 py-1 w-full" />
+                <input 
+                  name="dateNaissance" 
+                  type="date" 
+                  value={
+                    editUserValues.dateNaissance ? (
+                      editUserValues.dateNaissance.includes('T') ? 
+                        editUserValues.dateNaissance.split('T')[0] : 
+                        editUserValues.dateNaissance
+                    ) : ""
+                  } 
+                  onChange={handleEditUserChange} 
+                  className="border rounded px-2 py-1 w-full" 
+                />
               </div>
               <div>
                 <label className="font-semibold">Adresse : </label>
@@ -284,7 +298,12 @@ export default function Profile() {
                 <div><span className="font-semibold">Prénom :</span> {user.prenom}</div>
                 <div><span className="font-semibold">Email :</span> {user.email}</div>
                 <div><span className="font-semibold">Téléphone :</span> {user.telephone}</div>
-                <div><span className="font-semibold">Date de naissance :</span> {user.dateNaissance && new Date(user.dateNaissance).toLocaleDateString()}</div>
+                <div><span className="font-semibold">Date de naissance :</span> {
+                  user.dateNaissance && 
+                  (typeof user.dateNaissance === 'string' ? 
+                    new Date(user.dateNaissance).toLocaleDateString() : 
+                    user.dateNaissance.toLocaleDateString())
+                }</div>
                 <div><span className="font-semibold">Adresse :</span> {user.adresse}</div>
                 <div><span className="font-semibold">Poste :</span> {user.poste}</div>
                 <div><span className="font-semibold">Rôle :</span> {user.role}</div>

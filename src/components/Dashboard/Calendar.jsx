@@ -91,7 +91,6 @@ export default function AbsenceCalendar() {
 
   useSocket((event, payload) => {
     if (event === 'absence:created' || event === 'absence:updated' || event === 'absence:deleted') {
-      // Recharge le planning à la réception d'une absence modifiée
       if (selectedEmployeeId) {
         const from = format(weekStart, 'yyyy-MM-dd');
         const to = format(addDays(weekStart, 6), 'yyyy-MM-dd');

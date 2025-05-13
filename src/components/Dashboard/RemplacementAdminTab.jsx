@@ -3,19 +3,22 @@ import { getAbsencesSansRemplacant } from "../../api/absento";
 import { useAuth } from "../../context/AuthProvider";
 
 export default function RemplacementAdminTab() {
-  const { user, token } = useAuth();
+  const { user } = useAuth();
   const [absences, setAbsences] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!user || !token) return;
+    if (!user) return;
     setLoading(true);
-    getAbsencesSansRemplacant(token)
+    getAbsencesSansRemplacant()
       .then(setAbsences)
-      .catch(() => setError("Erreur lors du chargement des absences."))
+      .catch((err) => {
+        console.error("Erreur lors du chargement des absences:", err);
+        setError("Erreur lors du chargement des absences.");
+      })
       .finally(() => setLoading(false));
-  }, [user, token]);
+  }, [user]);
 
   if (!user || (user.role !== "ADMIN" && user.role !== "MANAGER")) return null;
 

@@ -7,18 +7,21 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState(null);
-  const [token, setToken] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
     async function fetchProfile() {
       try {
         setLoading(true);
         setAuthError(null);
+   
         const profile = await getUserProfile();
         setUser(profile);
+        setIsAuthenticated(true);
       } catch (err) {
-        // Si erreur 401 (non connecté), on ne bloque pas l'UI
+        console.error('Erreur de récupération du profil:', err);
         setUser(null);
+        setIsAuthenticated(false);
         setAuthError(null);
       } finally {
         setLoading(false);
@@ -28,18 +31,31 @@ export function AuthProvider({ children }) {
   }, []);
 
   const loginUser = async (email, password) => {
-    await login(email, password);
-    const profile = await getUserProfile();
-    setUser(profile);
-    setAuthError(null);
-    return profile;
+    try {
+      const response = await login(email, password);
+      
+      if (response && response.token) {
+        localStorage.setItem('auth_token', response.token);
+      }
+      
+      const profile = await getUserProfile();
+      setUser(profile);
+      setIsAuthenticated(true);
+      setAuthError(null);
+      return profile;
+    } catch (error) {
+      console.error('Erreur de connexion:', error);
+      setAuthError(error.response?.data?.error || 'Erreur de connexion');
+      throw error;
+    }
   };
 
   const logout = async () => {
     await logoutApi();
+    localStorage.removeItem('auth_token');
     setUser(null);
     setAuthError(null);
-    setToken(null);
+    setIsAuthenticated(false);
   };
 
   const refreshUser = async () => {
@@ -48,11 +64,10 @@ export function AuthProvider({ children }) {
     return profile;
   };
 
-  // On n'affiche pas un écran de chargement bloquant sur les pages publiques
-  // Si besoin, tu peux personnaliser ce comportement ici
+
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, loginUser, logout, authError, refreshUser }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, loading, loginUser, logout, authError, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

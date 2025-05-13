@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { registerEntreprise } from "../../api/absento";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 
-// Regex de validation pour chaque champ
 const regex = {
   nomEntreprise: /^[A-Za-z0-9À-ÿ' -]{2,100}$/,
   siret: /^\d{14}$/,
@@ -23,7 +22,6 @@ function validateDateNaissance(dateString) {
   return !isNaN(date) && age >= 18;
 }
 
-// Hook utilitaire pour détecter le mobile
 function useIsMobile() {
   if (typeof window === 'undefined') return false;
   return window.matchMedia('(max-width: 640px)').matches;
@@ -50,7 +48,6 @@ export default function RegisterForm() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
-  // Validation de tous les champs avec regex
   function validateAllFields() {
     if (!regex.nomEntreprise.test(nomEntreprise)) return "Nom d'entreprise invalide (lettres, chiffres, 2-100 caractères)";
     if (!regex.siret.test(siret)) return "SIRET invalide (14 chiffres)";

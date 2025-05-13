@@ -7,6 +7,7 @@ import "../ui/animations.css";
 import { API_URL } from '../../api/config';
 import { fetchEmployees } from '../../api/employees';
 import useSocket from "../../hooks/useSocket";
+import axios from 'axios';
 
 export default function TaskList() {
   const { user } = useAuth();
@@ -21,23 +22,15 @@ export default function TaskList() {
   const [showAddModal, setShowAddModal] = useState(false);
   const isManager = user && ["RH", "MANAGER", "RESPONSABLE", "ADMIN"].includes(user.role);
 
-  // Ecoute WebSocket pour reload les tâches en temps réel
   useSocket((event, payload) => {
     if (event === "notification" && payload && payload.message && payload.message.includes("tâche")) {
-      fetch(`${API_URL}/tasks`, {
-        credentials: 'include',
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          setTasks(Array.isArray(data) ? data : []);
+      axios.get(`${API_URL}/tasks`)
+        .then((res) => {
+          setTasks(Array.isArray(res.data) ? res.data : []);
         });
-      // Rafraîchir les tâches assignées si manager
       if (isManager) {
-        fetch(`${API_URL}/tasks/assigned-by-me`, {
-          credentials: 'include',
-        })
-          .then((res) => res.json())
-          .then((data) => setAssignedTasks(Array.isArray(data) ? data : []));
+        axios.get(`${API_URL}/tasks/assigned-by-me`)
+          .then((res) => setAssignedTasks(Array.isArray(res.data) ? res.data : []));
       }
     }
   });
@@ -45,36 +38,32 @@ export default function TaskList() {
   useEffect(() => {
     if (!user) return;
     setLoading(true);
-    fetch(`${API_URL}/tasks`, {
-      credentials: 'include',
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        setTasks(Array.isArray(data) ? data : []);
+    axios.get(`${API_URL}/tasks`)
+      .then((res) => {
+        setTasks(Array.isArray(res.data) ? res.data : []);
         setLoading(false);
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error("Erreur de chargement des tâches:", err);
         setError("Erreur lors du chargement des tâches");
         setLoading(false);
       });
     if (isManager) {
       fetchEmployees().then(setEmployees).catch(() => setEmployees([]));
-      fetch(`${API_URL}/tasks/assigned-by-me`, {
-        credentials: 'include',
-      })
-        .then((res) => res.json())
-        .then((data) => setAssignedTasks(Array.isArray(data) ? data : []));
+      axios.get(`${API_URL}/tasks/assigned-by-me`)
+        .then((res) => setAssignedTasks(Array.isArray(res.data) ? res.data : []));
     }
   }, [user]);
 
   const handleDelete = (task) => setModalDelete({ open: true, task });
   const confirmDelete = async () => {
     if (!modalDelete.task) return;
-    const res = await fetch(`${API_URL}/tasks/${modalDelete.task.id}`, {
-      method: "DELETE",
-      credentials: 'include',
-    });
-    if (res.ok) setTasks((ts) => ts.filter((t) => t.id !== modalDelete.task.id));
+    try {
+      await axios.delete(`${API_URL}/tasks/${modalDelete.task.id}`);
+      setTasks((ts) => ts.filter((t) => t.id !== modalDelete.task.id));
+    } catch (err) {
+      console.error("Erreur lors de la suppression:", err);
+    }
     setModalDelete({ open: false, task: null });
   };
 
@@ -83,33 +72,23 @@ export default function TaskList() {
     setEditValue(title);
   };
   const handleEdit = async (id) => {
-    const res = await fetch(`${API_URL}/tasks/${id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: 'include',
-      body: JSON.stringify({ title: editValue }),
-    });
-    if (res.ok) {
+    try {
+      await axios.put(`${API_URL}/tasks/${id}`, { title: editValue });
       setTasks((ts) => ts.map((t) => (t.id === id ? { ...t, title: editValue } : t)));
       setEditingId(null);
       setEditValue("");
+    } catch (err) {
+      console.error("Erreur lors de la mise à jour:", err);
     }
   };
 
   const toggleCompleted = async (id, completed) => {
-    const res = await fetch(`${API_URL}/tasks/${id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: 'include',
-      body: JSON.stringify({ completed: !completed }),
-    });
-    if (res.ok) {
+    try {
+      await axios.put(`${API_URL}/tasks/${id}`, { completed: !completed });
       setTasks((ts) => ts.map((t) => (t.id === id ? { ...t, completed: !completed } : t)));
       window.dispatchEvent(new CustomEvent("refreshTaskCounter"));
+    } catch (err) {
+      console.error("Erreur lors de la mise à jour du statut:", err);
     }
   };
 
@@ -214,32 +193,21 @@ export default function TaskList() {
         open={showAddModal}
         onClose={() => setShowAddModal(false)}
         onAdd={async ({ title, userId }) => {
-          const body = { title };
-          // Réactive l'ajout du userId si manager/admin et userId sélectionné
-          if (isManager && userId) body.userId = Number(userId);
-          const res = await fetch(`${API_URL}/tasks`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            credentials: 'include',
-            body: JSON.stringify(body),
-          });
-          if (!res.ok) {
-            const err = await res.json();
-            return err;
-          }
-          if (res.ok) {
-            const task = await res.json();
-            setTasks((ts) => [...ts, task]);
-            // Rafraîchit les tâches assignées si besoin
+          try {
+            const body = { title };
+            if (isManager && userId) body.userId = Number(userId);
+            
+            const res = await axios.post(`${API_URL}/tasks`, body);
+            setTasks((ts) => [...ts, res.data]);
+            
             if (isManager && userId && userId !== user.id) {
-              fetch(`${API_URL}/tasks/assigned-by-me`, {
-                credentials: 'include',
-              })
-                .then((res) => res.json())
-                .then((data) => setAssignedTasks(Array.isArray(data) ? data : []));
+              axios.get(`${API_URL}/tasks/assigned-by-me`)
+                .then((res) => setAssignedTasks(Array.isArray(res.data) ? res.data : []));
             }
+            
+            setShowAddModal(false);
+          } catch (err) {
+            console.error("Erreur lors de la création de la tâche:", err);
           }
         }}
         employees={employees}

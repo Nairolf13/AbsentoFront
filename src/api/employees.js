@@ -1,24 +1,22 @@
 import { API_URL } from './config';
+import axios from 'axios';
 
 export async function fetchEmployees() {
-  const res = await fetch(`${API_URL}/utilisateur/entreprise/employes`, {
-    credentials: 'include'
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data?.error || 'Erreur lors de la récupération des employés');
-  return Array.isArray(data) ? data : [];
+  try {
+    const res = await axios.get(`${API_URL}/utilisateur/entreprise/employes`);
+    return Array.isArray(res.data) ? res.data : [];
+  } catch (error) {
+    console.error("Erreur lors de la récupération des employés:", error);
+    throw new Error(error.response?.data?.error || 'Erreur lors de la récupération des employés');
+  }
 }
 
 export async function addEmployee(employeeData) {
-  const res = await fetch(`${API_URL}/utilisateur/create`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    credentials: 'include',
-    body: JSON.stringify(employeeData)
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data?.error || 'Erreur lors de l\'ajout de l\'employé');
-  return data;
+  try {
+    const res = await axios.post(`${API_URL}/utilisateur/create`, employeeData);
+    return res.data;
+  } catch (error) {
+    console.error("Erreur lors de l'ajout de l'employé:", error);
+    throw new Error(error.response?.data?.error || 'Erreur lors de l\'ajout de l\'employé');
+  }
 }

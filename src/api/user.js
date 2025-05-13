@@ -1,25 +1,26 @@
 import { API_URL } from './config';
+import axios from 'axios';
 
 export async function updateUser(id, userData) {
-  const res = await fetch(`${API_URL}/utilisateur/${id}`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    credentials: 'include',
-    body: JSON.stringify(userData)
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data?.error || 'Erreur lors de la modification du profil');
-  return data;
+  try {
+    if (userData.dateNaissance && userData.dateNaissance.includes('T')) {
+      userData.dateNaissance = userData.dateNaissance.split('T')[0];
+    }
+    
+    const res = await axios.put(`${API_URL}/utilisateur/${id}`, userData);
+    return res.data;
+  } catch (error) {
+    console.error("Erreur lors de la mise à jour de l'utilisateur:", error);
+    throw new Error(error.response?.data?.error || 'Erreur lors de la modification du profil');
+  }
 }
 
 export async function deleteUser(id) {
-  const res = await fetch(`${API_URL}/utilisateur/${id}`, {
-    method: 'DELETE',
-    credentials: 'include'
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data?.error || 'Erreur lors de la suppression du compte');
-  return data;
+  try {
+    const res = await axios.delete(`${API_URL}/utilisateur/${id}`);
+    return res.data;
+  } catch (error) {
+    console.error("Erreur lors de la suppression de l'utilisateur:", error);
+    throw new Error(error.response?.data?.error || 'Erreur lors de la suppression du compte');
+  }
 }

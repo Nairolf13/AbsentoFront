@@ -81,10 +81,8 @@ export default function Notifications({ onCountChange }) {
 
   if (!show) return null;
 
-  // Gestion navigation mobile
   const navigateBack = () => {
     if (window.innerWidth <= 768) {
-      // Sur mobile, on redirige toujours vers le dashboard
       window.location.href = "/dashboard";
     } else {
       if (window.history.length > 1) {
@@ -95,7 +93,6 @@ export default function Notifications({ onCountChange }) {
     }
   };
 
-  // Détection mobile
   const isMobile = window.innerWidth <= 768;
 
   return (

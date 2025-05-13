@@ -15,7 +15,6 @@ export default function HeaderWithAuth() {
       } else if (document.visibilityState === "visible") {
         if (leaveTimestamp.current) {
           const diff = Date.now() - leaveTimestamp.current;
-          // 30 minutes = 1800000 ms
           if (diff >= TIMEOUT_MINUTES * 60 * 1000) {
             logout();
           }

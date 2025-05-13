@@ -17,6 +17,7 @@ import Calendar from "./components/Dashboard/Calendar";
 import HistoriqueAbsences from "./components/Dashboard/HistoriqueAbsences";
 import EmployeeDashboardTab from "./components/Employee/EmployeeDashboardTab";
 import MesTaches from "./pages/MesTaches";
+import { ToastContainer } from 'react-toastify';
 
 function AppContent() {
   const { pathname } = useLocation();
@@ -55,21 +56,8 @@ export default function App() {
   return (
     <BrowserRouter>
       <AppContent />
+      <ToastContainer position="top-right" autoClose={5000} />
     </BrowserRouter>
   );
 }
 
-// Note: The link to the register page should be added in the LoginForm component, not in the App component.
-// The following code should be added in the LoginForm component:
-// 
-// import { useNavigate } from "react-router-dom";
-// 
-// function LoginForm() {
-//   const navigate = useNavigate();
-// 
-//   return (
-//     // ...
-//     <div className="text-xs text-center mt-4 text-secondary cursor-pointer" onClick={() => navigate('/register')}>Create an account</div>
-//     // ...
-//   );
-// }

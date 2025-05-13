@@ -4,7 +4,7 @@ import { getAbsencesSansRemplacant } from "../api/absento";
 import { useNavigate } from "react-router-dom";
 
 export default function RemplacementAdmin() {
-  const { user, token } = useAuth();
+  const { user } = useAuth();
   const [absences, setAbsences] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -13,11 +13,14 @@ export default function RemplacementAdmin() {
   useEffect(() => {
     if (!user) return;
     setLoading(true);
-    getAbsencesSansRemplacant(token)
+    getAbsencesSansRemplacant()
       .then(setAbsences)
-      .catch(() => setError("Erreur lors du chargement des absences."))
+      .catch((err) => {
+        console.error("Erreur lors du chargement des absences:", err);
+        setError("Erreur lors du chargement des absences.");
+      })
       .finally(() => setLoading(false));
-  }, [user, token]);
+  }, [user]);
 
   const handleChoisirRemplacant = (absence) => {
     localStorage.setItem("selectedAbsence", JSON.stringify(absence));

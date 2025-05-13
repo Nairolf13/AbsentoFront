@@ -4,7 +4,7 @@ import { useAuth } from "../../context/AuthProvider";
 
 export default function PrivateRoute({ children }) {
   const { user, loading } = useAuth();
-  if (loading) return null; // ou un spinner
+  if (loading) return null; 
   if (!user) {
     console.warn('[PrivateRoute] Redirection vers /login car utilisateur non authentifié');
     return <Navigate to="/login" replace />;

@@ -12,6 +12,8 @@ import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 import { getAllAbsences } from "../../api/absento";
 import { API_URL } from "../../api/config";
 import useSocket from '../../hooks/useSocket';
+import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const icons = {
   calendar: (
@@ -46,6 +48,8 @@ export default function Dashboard() {
   const [burgerOpen, setBurgerOpen] = useState(false);
   const [absencesEnCours, setAbsencesEnCours] = useState(0);
   const [tasksEnCours, setTasksEnCours] = useState(0);
+  const { socket } = useSocket();
+  const [tasks, setTasks] = useState([]);
 
   const tabToRoute = {
     calendar: '',
@@ -86,22 +90,26 @@ export default function Dashboard() {
   }, [location.state, activeTab, navigate, location.pathname, location.key]);
 
   useEffect(() => {
+    if (!user) return;
+    
     async function fetchAbsences() {
       try {
         const absences = await getAllAbsences();
         const enCours = absences.filter(a => a.status === "En attente" || a.status === "en attente" || a.status === "EN_ATTENTE" || a.statut === "En attente" || a.statut === "en attente" || a.statut === "EN_ATTENTE").length;
         setAbsencesEnCours(enCours);
       } catch (e) {
+        console.error("Erreur lors du chargement des absences:", e);
         setAbsencesEnCours(0);
       }
     }
     async function fetchTasks() {
       try {
-        const res = await fetch(`${API_URL}/tasks`, { credentials: 'include' });
-        const tasks = await res.json();
+        const res = await axios.get(`${API_URL}/tasks`);
+        const tasks = res.data;
         const enCours = Array.isArray(tasks) ? tasks.filter(t => !t.completed).length : 0;
         setTasksEnCours(enCours);
       } catch (e) {
+        console.error("Erreur lors du chargement des tâches:", e);
         setTasksEnCours(0);
       }
     }
@@ -115,7 +123,24 @@ export default function Dashboard() {
       window.removeEventListener("refreshAbsenceCounter", handlerAbs);
       window.removeEventListener("refreshTaskCounter", handlerTasks);
     };
-  }, []);
+  }, [user]);
+
+  useEffect(() => {
+    if (socket) {
+      socket.on('task-update', (data) => {
+        if (data.type === 'delete') {
+          setTasks(currentTasks => 
+            currentTasks.filter(task => task.id !== data.task.id)
+          );
+          toast.info("Une tâche a été supprimée");
+        }
+      });
+
+      return () => {
+        socket.off('task-update');
+      };
+    }
+  }, [socket]);
 
   const isCalendarTab = activeTab === 'calendar';
 

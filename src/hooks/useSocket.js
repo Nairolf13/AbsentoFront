@@ -1,26 +1,52 @@
-import { useEffect, useRef } from 'react';
-import { io } from 'socket.io-client';
-import { useAuth } from '../context/AuthProvider';
+import { useEffect, useState } from 'react';
+import io from 'socket.io-client';
+import { getToken } from '../utils/auth';
 
-const SOCKET_URL = import.meta.env.VITE_API_URL.replace(/\/api$/, '');
-
-export default function useSocket(onEvent) {
-  const socketRef = useRef(null);
-  const { token } = useAuth();
+const useSocket = () => {
+  const [socket, setSocket] = useState(null);
+  const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
+    const token = getToken();
     if (!token) return;
-    socketRef.current = io(SOCKET_URL, {
+
+    const newSocket = io(import.meta.env.VITE_API_URL, {
+      withCredentials: true,
       auth: { token }
     });
-    const socket = socketRef.current;
-    if (onEvent) {
-      socket.onAny((event, ...args) => onEvent(event, ...args));
-    }
-    return () => {
-      socket.disconnect();
-    };
-  }, [onEvent, token]);
 
-  return socketRef.current;
-}
+    newSocket.on('connect', () => {
+      console.log('Connecté au socket');
+      setIsConnected(true);
+      
+    
+      const user = getCurrentUser(); 
+      if (user && user.id) {
+        newSocket.emit('identify', user.id);
+      }
+    });
+
+    newSocket.on('disconnect', () => {
+      console.log('Déconnecté du socket');
+      setIsConnected(false);
+    });
+
+    setSocket(newSocket);
+
+    return () => newSocket.close();
+  }, []);
+
+  return { socket, isConnected };
+};
+
+const getCurrentUser = () => {
+  try {
+    const userStr = localStorage.getItem('user');
+    return userStr ? JSON.parse(userStr) : null;
+  } catch (error) {
+    console.error('Error getting current user:', error);
+    return null;
+  }
+};
+
+export default useSocket;

@@ -4,6 +4,8 @@ import { useAuth } from "../../context/AuthProvider";
 import { useNavigate } from "react-router-dom";
 import ConfirmModal from "../ui/ConfirmModal";
 import "../ui/animations.css";
+import axios from 'axios';
+import { API_URL } from '../../api/config';
 import { fetchEmployees as fetchEmployeesApi, addEmployee } from '../../api/employees';
 
 export default function EmployeeAdmin() {
@@ -92,12 +94,11 @@ export default function EmployeeAdmin() {
   const handleCsvAdd = async () => {
     if (!csvData || csvData.length === 0) return;
     setCsvError(""); setCsvSuccess(""); setCsvLoading(true);
-    setCsvImportResult(null); // Reset avant nouvel import
+    setCsvImportResult(null); 
     const requiredFields = ["nom", "prenom", "email", "telephone", "dateNaissance", "adresse", "poste", "role"];
     const validRows = [];
     const invalidRows = [];
     csvData.forEach(row => {
-      // Normalisation email CSV
       if (row.email) row.email = row.email.trim().toLowerCase();
       const hasAllFields = requiredFields.every(f => row[f]);
       const dateObj = new Date(row.dateNaissance);
@@ -113,28 +114,17 @@ export default function EmployeeAdmin() {
       return;
     }
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/password/invite`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: 'include',
-        body: JSON.stringify(validRows)
-      });
-      const data = await res.json();
-      setCsvImportResult(data); // Enregistre le résultat pour la coloration
-      if (!res.ok) {
-        setCsvError(data.message || "Erreur lors de l'import des employés.");
-      } else {
-        let msg = "";
-        if (data.created?.length) msg += `${data.created.length} employés importés : ${data.created.join(", ")}.\n`;
-        if (data.ignored?.length) msg += `${data.ignored.length} déjà existants ignorés : ${data.ignored.join(", ")}.\n`;
-        if (invalidRows.length) msg += `${invalidRows.length} lignes invalides ignorées (champs manquants ou date incorrecte) : ${invalidRows.join(", ")}.\n`;
-        if (data.invalid?.length) msg += `${data.invalid.length} lignes invalides ignorées côté backend : ${data.invalid.join(", ")}.`;
-        setCsvSuccess(msg.trim());
-        setCsvData(null);
-        fetchEmployees(); // Rafraîchit la liste des employés
-      }
+      const res = await axios.post(`${API_URL}/password/invite`, validRows);
+      const data = res.data;
+      setCsvImportResult(data); 
+      let msg = "";
+      if (data.created?.length) msg += `${data.created.length} employés importés : ${data.created.join(", ")}.\n`;
+      if (data.ignored?.length) msg += `${data.ignored.length} déjà existants ignorés : ${data.ignored.join(", ")}.\n`;
+      if (invalidRows.length) msg += `${invalidRows.length} lignes invalides ignorées (champs manquants ou date incorrecte) : ${invalidRows.join(", ")}.\n`;
+      if (data.invalid?.length) msg += `${data.invalid.length} lignes invalides ignorées côté backend : ${data.invalid.join(", ")}.`;
+      setCsvSuccess(msg.trim());
+      setCsvData(null);
+      fetchEmployees(); 
     } catch (e) {
       setCsvError("Erreur lors de l'import des employés.");
     } finally {
@@ -151,7 +141,6 @@ export default function EmployeeAdmin() {
     setSingleLoading(true);
     setSingleError("");
     setSingleSuccess("");
-    // Vérification côté frontend des champs obligatoires
     const requiredFields = ["nom", "prenom", "email", "telephone", "dateNaissance", "adresse", "poste", "role"];
     const missing = requiredFields.filter(f => !singleForm[f]);
     if (missing.length > 0) {
@@ -161,12 +150,7 @@ export default function EmployeeAdmin() {
     }
     try {
       const normalizedForm = { ...singleForm, email: singleForm.email.trim().toLowerCase() };
-      await fetch(`${import.meta.env.VITE_API_URL}/password/invite`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: 'include',
-        body: JSON.stringify([normalizedForm])
-      });
+      await axios.post(`${API_URL}/password/invite`, [normalizedForm]);
       setSingleSuccess("Employé ajouté et mail d'invitation envoyé");
       setSingleForm({
         nom: "",
@@ -199,7 +183,7 @@ export default function EmployeeAdmin() {
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/utilisateur/${modalDelete.emp.id}`, {
         method: "DELETE",
-        credentials: 'include', // Ajouté pour transmettre le cookie JWT
+        credentials: 'include', 
       });
       if (res.ok) {
         setEmployees((emps) => emps.filter((e) => e.id !== modalDelete.emp.id));
@@ -464,7 +448,6 @@ export default function EmployeeAdmin() {
                         </thead>
                         <tbody>
                           {csvData.map((row, idx) => {
-                            // Après import, affiche le statut selon le résultat
                             let rowClass = '';
                             if (csvImportResult) {
                               if (csvImportResult.created && csvImportResult.created.includes(row.email)) {
@@ -478,7 +461,6 @@ export default function EmployeeAdmin() {
                               const emailExists = employees.some(e => e.email && row.email && e.email.toLowerCase() === row.email.toLowerCase());
                               rowClass = emailExists ? 'bg-red-100' : 'bg-green-100';
                             }
-                            // Nom en couleur selon statut
                             let nomClass = '';
                             if (csvImportResult) {
                               if (csvImportResult.created && csvImportResult.created.includes(row.email)) {
@@ -643,7 +625,14 @@ export default function EmployeeAdmin() {
                 <option value="RH">RH</option>
                 <option value="ADMIN">Admin</option>
               </select>
-              <input type="date" value={editEmp.dateNaissance ? (typeof editEmp.dateNaissance === 'string' ? editEmp.dateNaissance.split('T')[0] : new Date(editEmp.dateNaissance).toISOString().split('T')[0]) : ''} onChange={e => setEditEmp(emp => ({ ...emp, dateNaissance: e.target.value }))} className="block w-full rounded-xl border border-primary px-4 py-3" required />
+              <input type="date" value={
+                editEmp.dateNaissance ? (
+                  typeof editEmp.dateNaissance === 'string' ? 
+                    editEmp.dateNaissance.includes('T') ? editEmp.dateNaissance.split('T')[0] : editEmp.dateNaissance 
+                    : 
+                    new Date(editEmp.dateNaissance).toISOString().split('T')[0]
+                ) : ''
+              } onChange={e => setEditEmp(emp => ({ ...emp, dateNaissance: e.target.value }))} className="block w-full rounded-xl border border-primary px-4 py-3" required />
               <div className="flex flex-col gap-1 pt-1">
                 <button type="submit" className="bg-primary text-white font-bold px-6 py-2 rounded-xl hover:bg-primary/80 transition" disabled={editLoading}>Enregistrer</button>
                 <button type="button" className="bg-gray-300 text-gray-700 font-bold px-6 py-2 rounded-xl hover:bg-gray-400 transition" onClick={() => setEditEmp(null)}>Annuler</button>
