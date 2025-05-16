@@ -1,4 +1,3 @@
-import React from "react";
 import ReactDOM from "react-dom";
 
 function ConfirmModalContent({ open, title, message, onConfirm, onCancel, confirmText = "Confirmer", cancelText = "Annuler" }) {

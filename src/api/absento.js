@@ -16,7 +16,7 @@ export const login = async (email, password) => {
 
 export const logout = async () => {
   try {
-    await axios.post(`${API_URL}/auth/logout`, {});
+    await axios.post(`/auth/logout`, {});
   } catch (error) {
     console.error("Erreur lors de la déconnexion:", error);
   } finally {
@@ -25,12 +25,12 @@ export const logout = async () => {
 };
 
 export const register = async (user) => {
-  const { data } = await axios.post(`${API_URL}/auth/register`, user);
+  const { data } = await axios.post(`/auth/register`, user);
   return data;
 };
 
 export const registerEntreprise = async (entreprise) => {
-  const { data } = await axios.post(`${API_URL}/auth/register-entreprise`, entreprise);
+  const { data } = await axios.post(`/auth/register-entreprise`, entreprise);
   return data;
 };
 
@@ -52,57 +52,57 @@ export const requestAbsence = async (absence) => {
 };
 
 export const getReplacements = async () => {
-  const { data } = await axios.get(`${API_URL}/absences/suggestions`);
+  const { data } = await axios.get(`/absences/suggestions`);
   return data;
 };
 
 export const getNotifications = async () => {
-  const { data } = await axios.get(`${API_URL}/notifications`);
+  const { data } = await axios.get(`/notifications`);
   return data;
 };
 
 export const assignReplacement = async (remplacementId) => {
-  const { data } = await axios.patch(`${API_URL}/absences/remplacement/${remplacementId}/valider`, {});
+  const { data } = await axios.patch(`/absences/remplacement/${remplacementId}/valider`, {});
   return data;
 };
 
 export const refuseReplacement = async (remplacementId) => {
-  const { data } = await axios.delete(`${API_URL}/absences/remplacement/${remplacementId}/refuser`);
+  const { data } = await axios.delete(`/absences/remplacement/${remplacementId}/refuser`);
   return data;
 };
 
 export const getMyRemplacements = async () => {
-  const { data } = await axios.get(`${API_URL}/absences/mes-remplacements`);
+  const { data } = await axios.get(`/absences/mes-remplacements`);
   return data;
 };
 
 export const getMyAbsences = async () => {
-  const { data } = await axios.get(`${API_URL}/absences/mes-absences`);
+  const { data } = await axios.get(`/absences/mes-absences`);
   return data;
 };
 
 export const validateAbsence = async (absenceId) => {
-  const { data } = await axios.patch(`${API_URL}/absences/valider/${absenceId}`, {});
+  const { data } = await axios.patch(`/absences/valider/${absenceId}`, {});
   return data;
 };
 
 export const refuseAbsence = async (absenceId) => {
-  const { data } = await axios.patch(`${API_URL}/absences/refuser/${absenceId}`, {});
+  const { data } = await axios.patch(`/absences/refuser/${absenceId}`, {});
   return data;
 };
 
 export const deleteAbsence = async (absenceId) => {
-  const { data } = await axios.delete(`${API_URL}/absences/${absenceId}`);
+  const { data } = await axios.delete(`/absences/${absenceId}`);
   return data;
 };
 
 export const getAbsencesSansRemplacant = async () => {
-  const { data } = await axios.get(`${API_URL}/absences/sans-remplacant`);
+  const { data } = await axios.get(`/absences/sans-remplacant`);
   return data;
 };
 
 export const getAllAbsences = async () => {
-  const { data } = await axios.get(`${API_URL}/absences/toutes`);
+  const { data } = await axios.get(`/absences/toutes`);
   return data;
 };
 

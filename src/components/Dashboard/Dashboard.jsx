@@ -1,11 +1,4 @@
-import React, { useEffect, useState } from "react";
-import Calendar from "./Calendar";
-import HistoriqueAbsences from "./HistoriqueAbsences";
-import RequestAbsenceForm from "../Absence/RequestAbsenceForm";
-import RemplacementSuggestPage from "../../pages/RemplacementSuggest";
-import RemplacementAdminTab from "./RemplacementAdminTab"; 
-import EmployeeDashboardTab from "../Employee/EmployeeDashboardTab";
-import TaskList from "./TaskList";
+import { useEffect, useState } from "react";
 import { useNavigate, useLocation, useParams, Outlet } from "react-router-dom";
 import { useAuth } from "../../context/AuthProvider";
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
@@ -50,6 +43,7 @@ export default function Dashboard() {
   const [tasksEnCours, setTasksEnCours] = useState(0);
   const { socket } = useSocket();
   const [tasks, setTasks] = useState([]);
+  const [activeTab, setActiveTab] = useState('calendar');
 
   const tabToRoute = {
     calendar: '',
@@ -69,12 +63,28 @@ export default function Dashboard() {
     employes: 'employes',
   };
 
-  const activeTab = routeToTab[(subroute || '').split('/')[0]] || 'calendar';
-
   const handleSidebarClick = (key) => {
     navigate(`/dashboard/${tabToRoute[key]}`);
+    setActiveTab(key);
     window.dispatchEvent(new CustomEvent("refreshNotifications"));
   };
+  
+  useEffect(() => {
+    const pathParts = location.pathname.split('/');
+    let currentRoute = '';
+    
+    if (pathParts.length >= 3 && pathParts[1] === 'dashboard') {
+      currentRoute = pathParts[2] || '';
+    }
+    
+    const matchedTab = routeToTab[currentRoute];
+    
+    if (matchedTab) {
+      setActiveTab(matchedTab);
+    } else {
+      setActiveTab('calendar');
+    }
+  }, [location.pathname]);
 
   useEffect(() => {
     if (location.state?.showAbsenceNotif && activeTab === "calendar") {
@@ -88,6 +98,7 @@ export default function Dashboard() {
       navigate(location.pathname, { replace: true, state: {} });
     }
   }, [location.state, activeTab, navigate, location.pathname, location.key]);
+  
 
   useEffect(() => {
     if (!user) return;
@@ -142,6 +153,7 @@ export default function Dashboard() {
     }
   }, [socket]);
 
+
   const isCalendarTab = activeTab === 'calendar';
 
   const sidebarItems = [
@@ -163,9 +175,7 @@ export default function Dashboard() {
 
   return (
     <div className="h-screen w-full">
-      {/* Mobile layout */}
       <div className="md:hidden flex flex-col h-full bg-accent">
-        {/* Header avec menu burger tout en haut à gauche et titre centré */}
         <header className="relative flex items-center justify-center px-4 py-3 bg-accent border-b border-secondary">
           <button
             className="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-xl bg-primary/10 text-primary focus:outline-none"
@@ -182,7 +192,6 @@ export default function Dashboard() {
           </div>
         </header>
 
-        {/* Menu burger drawer */}
         {burgerOpen && (
           <div className="fixed inset-0 z-50 bg-black/40 flex">
             <nav className="bg-white w-64 h-full shadow-lg p-6 flex flex-col">
@@ -193,25 +202,27 @@ export default function Dashboard() {
               >
                 <XMarkIcon className="w-8 h-8" />
               </button>
-              {sidebarItems.map((item) => (
-                <button
-                  key={item.key}
-                  className={`flex items-center gap-3 text-lg font-semibold rounded-xl px-4 py-3 mb-2 transition focus:outline-none w-full ${activeTab === item.key ? "bg-primary text-secondary" : "text-primary hover:bg-primary/10"}`}
-                  onClick={() => {
-                    handleSidebarClick(item.key);
-                    setBurgerOpen(false);
-                  }}
-                >
-                  <span>{item.icon}</span>
-                  <span>{item.label}</span>
-                </button>
-              ))}
+              {sidebarItems.map((item) => {
+                const isActive = activeTab === item.key;
+                return (
+                  <button
+                    key={item.key}
+                    className={`flex items-center gap-3 text-lg font-semibold rounded-xl px-4 py-3 mb-2 transition focus:outline-none w-full min-h-[56px] ${isActive ? "bg-primary text-secondary" : "text-primary hover:bg-primary/10"}`}
+                    onClick={() => {
+                      handleSidebarClick(item.key);
+                      setBurgerOpen(false);
+                    }}
+                  >
+                    <span className="flex-shrink-0">{item.icon}</span>
+                    <span>{item.label}</span>
+                  </button>
+                );
+              })}
             </nav>
             <div className="flex-1" onClick={() => setBurgerOpen(false)} />
           </div>
         )}
 
-        {/* KPI cards élargies sur toute la largeur */}
         <div className="flex gap-4 px-4 pt-6 w-full">
           <div className="flex-1 bg-white rounded-2xl p-5 flex flex-col items-center shadow border border-primary/30 min-w-0">
             <div className="text-2xl font-bold text-secondary">{absencesEnCours}</div>
@@ -227,7 +238,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Affichage dynamique centralisé selon l'onglet actif */}
         <div className="flex-1 flex flex-col min-h-0">
           {user ? (
             <Outlet />
@@ -240,24 +250,24 @@ export default function Dashboard() {
 
       </div>
 
-      {/* Desktop layout (inchangé) */}
       <div className="hidden md:flex h-screen bg-accent">
-        {/* Sidebar */}
-        <aside className="w-20 bg-secondary flex flex-col items-center py-6 gap-4">
-          {sidebarItems.map((item) => (
-            <button
-              key={item.key}
-              className={`flex flex-col items-center gap-1 text-xs font-semibold rounded-xl px-2 py-3 transition focus:outline-none ${activeTab === item.key ? "border-2 border-primary text-primary" : "border-none text-primary hover:bg-primary/20"}`}
-              onClick={() => handleSidebarClick(item.key)}
-            >
-              <span>{item.icon}</span>
-              <span className="mt-1">{item.label}</span>
-            </button>
-          ))}
+        
+        <aside className="w-36 bg-secondary flex flex-col items-center py-6 gap-4">
+              {sidebarItems.map((item) => {
+                const isActive = activeTab === item.key;
+                return (
+                  <button
+                    key={item.key}
+                    className={`flex flex-col items-center justify-center gap-1 text-xs font-semibold rounded-xl px-3 py-3 w-32 h-24 transition focus:outline-none ${isActive ? "border-2 border-primary text-primary bg-primary/10" : "border-none text-primary hover:bg-primary/20"}`}
+                    onClick={() => handleSidebarClick(item.key)}
+                  >
+                    <span>{item.icon}</span>
+                    <span className="mt-1 text-center w-full whitespace-normal">{item.label}</span>
+                  </button>
+                );
+              })}
         </aside>
-        {/* Main content desktop (inchangé) */}
         <main className="flex-1 flex flex-col min-w-0">
-          {/* Header */}
           <header className="flex items-center justify-between px-10 py-6 bg-accent border-b border-secondary">
             <div className="text-2xl font-semibold text-secondary flex items-center gap-2">
               Bonjour
@@ -269,7 +279,6 @@ export default function Dashboard() {
               <option>Mon périmètre</option>
             </select>
           </header>
-          {/* Stats cards */}
           <div className="flex gap-6 px-10 py-6">
             <div className="flex-1 bg-white rounded-2xl p-6 flex flex-col items-center shadow border border-primary/30">
               <div className="text-3xl font-bold text-secondary">{absencesEnCours}</div>
@@ -284,7 +293,6 @@ export default function Dashboard() {
               <div className="text-secondary mt-2">Mes tickets ouverts</div>
             </div>
           </div>
-          {/* Main grid: demandes + tâches */}
           <div className="flex flex-col lg:flex-row flex-1 gap-6 px-4 md:px-10 pb-10 min-h-0">
             <section className="flex-1 bg-white rounded-2xl shadow p-6 overflow-y-auto flex flex-col min-h-0">
               {user ? (

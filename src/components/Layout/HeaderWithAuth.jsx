@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useAuth } from "../../context/AuthProvider";
 import Header from "./Header";
 

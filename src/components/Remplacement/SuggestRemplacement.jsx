@@ -37,10 +37,7 @@ export default function SuggestRemplacement() {
 
   useEffect(() => {
     if (selectedAbsence) {
-      console.log("[DEBUG] Absence sélectionnée:", selectedAbsence);
       if (selectedAbsence.employee) {
-        console.log("[DEBUG] Poste de l'absent:", selectedAbsence.employee.poste);
-        console.log("[DEBUG] ID de l'absent:", selectedAbsence.employee.id);
       } else {
         console.warn("[DEBUG] Aucun employé associé à l'absence sélectionnée.");
       }
@@ -56,24 +53,19 @@ export default function SuggestRemplacement() {
   const [modalPropose, setModalPropose] = useState({ open: false, candidat: null });
 
   useEffect(() => {
-    console.log("[DEBUG] useEffect déclenché : token=", token, ", selectedAbsence=", selectedAbsence);
     if (token === undefined) {
-      console.warn("[DEBUG] Token pas encore chargé, on attend...");
       return;
     }
     if (!selectedAbsence || !selectedAbsence.employee) {
-      console.warn("[DEBUG] useEffect non exécuté: condition non remplie.");
       return;
     }
     setLoading(true);
     getRemplacantsPossibles(selectedAbsence.employee.poste, selectedAbsence.employee.id)
       .then(data => {
-        console.log("[DEBUG] Réponse API candidats:", data);
         setCandidats(data);
       })
       .catch((err) => {
         setError("Erreur lors du chargement des remplaçants");
-        console.error("[DEBUG] Erreur API candidats:", err);
       })
       .finally(() => setLoading(false));
   }, [selectedAbsence]);
@@ -170,7 +162,6 @@ export default function SuggestRemplacement() {
         )}
         {success && <div className="text-green-600 text-center mt-4">{success}</div>}
       </div>
-      {/* Modal de confirmation proposition remplaçant */}
       <ConfirmModal
         open={modalPropose.open}
         title="Confirmer la proposition ?"

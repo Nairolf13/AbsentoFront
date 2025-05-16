@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthProvider";
 import { getEntreprise, deleteEntreprise, updateEntreprise } from "../../api/entreprise";
 import { updateUser, deleteUser } from "../../api/user";

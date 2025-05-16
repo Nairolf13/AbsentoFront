@@ -1,4 +1,3 @@
-import React from "react";
 import { BrowserRouter, Routes, Route, Navigate, useLocation, Outlet } from "react-router-dom";
 import LoginForm from "./components/Auth/LoginForm";
 import RegisterForm from "./components/Auth/RegisterForm";
@@ -33,7 +32,6 @@ function AppContent() {
         <Route path="/remplacement-admin" element={<PrivateRoute><RemplacementAdmin /></PrivateRoute>} />
         <Route path="/absence/request" element={<PrivateRoute><RequestAbsenceForm /></PrivateRoute>} />
         <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>}>
-          {/* Redirection automatique de /dashboard vers /dashboard/calendar */}
           <Route index element={<Navigate to="/dashboard/calendar" replace />} />
           <Route path="calendar" element={<Calendar />} />
           <Route path="taches" element={<MesTaches />} />

@@ -30,6 +30,7 @@ export default function EmployeeAdmin() {
   const [employees, setEmployees] = useState([]);
   const [loadingEmployees, setLoadingEmployees] = useState(false);
   const [errorEmployees, setErrorEmployees] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
   const [editEmp, setEditEmp] = useState(null);
   const [editError, setEditError] = useState("");
@@ -199,7 +200,20 @@ export default function EmployeeAdmin() {
     return new Set(employees.map(e => e.email.toLowerCase()));
   };
 
-  const sortedEmployees = [...employees].sort((a, b) => {
+  const filteredEmployees = employees.filter(emp => {
+    if (!searchTerm.trim()) return true;
+    const term = searchTerm.toLowerCase().trim();
+    return (
+      (emp.nom && emp.nom.toLowerCase().includes(term)) ||
+      (emp.prenom && emp.prenom.toLowerCase().includes(term)) ||
+      (emp.email && emp.email.toLowerCase().includes(term)) ||
+      (emp.telephone && emp.telephone.toLowerCase().includes(term)) ||
+      (emp.poste && emp.poste.toLowerCase().includes(term)) ||
+      (emp.adresse && emp.adresse.toLowerCase().includes(term))
+    );
+  });
+
+  const sortedEmployees = [...filteredEmployees].sort((a, b) => {
     const nomA = (a.nom || '').toLowerCase();
     const nomB = (b.nom || '').toLowerCase();
     if (nomA < nomB) return -1;
@@ -212,8 +226,8 @@ export default function EmployeeAdmin() {
   });
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-accent py-12">
-      <div className="w-full  mx-auto relative">
+    <div className="flex flex-col items-center bg-accent py-12">
+      <div className="w-full mx-auto relative">
         {/* Bouton Ajouter en haut à droite */}
         <div className="absolute top-0 right-12 mt-4 mr-4 z-20" style={{ right: '3px' }}>
           <button
@@ -240,8 +254,42 @@ export default function EmployeeAdmin() {
           </button>
         </div>
         {/* Liste des employés, prend toute la largeur */}
-        <div className={`bg-white rounded-2xl shadow-lg px-10 py-8 border border-gray-200 transition-all duration-300 w-full max-w-[98vw] overflow-x-auto ${showAddForm ? 'opacity-40 pointer-events-none select-none' : ''}`}>
+        <div className={`bg-white rounded-2xl shadow-lg px-10 py-8 border border-gray-200 transition-all duration-300 w-full max-w-[98vw] ${showAddForm ? 'opacity-40 pointer-events-none select-none' : ''}`} style={{height: 'auto', overflowY: 'visible'}}>
           <h2 className="text-2xl font-bold mb-6 text-primary text-center">Liste des employés</h2>
+          
+          {/* Barre de recherche */}
+          <div className="mb-6 relative">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Rechercher un employé..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full rounded-xl border border-primary px-4 py-3 pl-10 focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-700"
+              />
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+              </div>
+              {searchTerm && (
+                <button 
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-primary"
+                  onClick={() => setSearchTerm("")}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                  </svg>
+                </button>
+              )}
+            </div>
+            {filteredEmployees.length === 0 && searchTerm && !loadingEmployees && (
+              <p className="mt-2 text-sm text-red-500">Aucun employé ne correspond à votre recherche.</p>
+            )}
+            {sortedEmployees.length > 0 && searchTerm && (
+              <p className="mt-2 text-sm text-gray-500">{sortedEmployees.length} employé(s) trouvé(s)</p>
+            )}
+          </div>
           {loadingEmployees ? (
             <div>Chargement…</div>
           ) : errorEmployees ? (
@@ -252,13 +300,13 @@ export default function EmployeeAdmin() {
             <div className="flex flex-col gap-4 w-full sm:hidden">
               {sortedEmployees.map(emp => (
                 <div key={emp.id} className="bg-accent/30 rounded-xl shadow p-3 flex flex-col gap-1 text-xs">
-                  <div className="flex justify-between"><span className="font-semibold">Nom</span><span>{emp.nom}</span></div>
-                  <div className="flex justify-between"><span className="font-semibold">Prénom</span><span>{emp.prenom}</span></div>
-                  <div className="flex justify-between"><span className="font-semibold">Email</span><span>{emp.email}</span></div>
-                  <div className="flex justify-between"><span className="font-semibold">Téléphone</span><span>{emp.telephone}</span></div>
-                  <div className="flex justify-between"><span className="font-semibold">Poste</span><span>{emp.poste}</span></div>
-                  <div className="flex justify-between"><span className="font-semibold">Rôle</span><span>{emp.role}</span></div>
-                  <div className="flex justify-between"><span className="font-semibold">Entreprise</span><span>{emp.entreprise?.nom}</span></div>
+                  <div className="flex justify-between"><span className="font-semibold">Nom</span><span className="text-right max-w-[65%] break-words">{emp.nom}</span></div>
+                  <div className="flex justify-between"><span className="font-semibold">Prénom</span><span className="text-right max-w-[65%] break-words">{emp.prenom}</span></div>
+                  <div className="flex justify-between"><span className="font-semibold">Email</span><span className="text-right max-w-[65%] break-words">{emp.email}</span></div>
+                  <div className="flex justify-between"><span className="font-semibold">Téléphone</span><span className="text-right max-w-[65%] break-words">{emp.telephone}</span></div>
+                  <div className="flex justify-between"><span className="font-semibold">Poste</span><span className="text-right max-w-[65%] break-words">{emp.poste}</span></div>
+                  <div className="flex justify-between"><span className="font-semibold">Rôle</span><span className="text-right max-w-[65%] break-words">{emp.role}</span></div>
+                  <div className="flex justify-between"><span className="font-semibold">Entreprise</span><span className="text-right max-w-[65%] break-words">{emp.entreprise?.nom}</span></div>
                   <div className="flex flex-col items-start">
                     <span className="font-semibold">Adresse</span>
                     <span className="whitespace-pre-line break-words text-left w-full bg-white/60 rounded px-2 py-1 mt-1" style={{wordBreak: 'break-word', fontSize: '0.98em'}}>{emp.adresse}</span>
@@ -279,44 +327,46 @@ export default function EmployeeAdmin() {
           ) : sortedEmployees.length === 0 ? (
             <div>Il n'y a pas d'employés à afficher.</div>
           ) : (
-            <div className="hidden sm:block">
-              <table className="w-full bg-white border border-gray-200 rounded-xl text-sm">
-                <thead>
-                  <tr>
-                    <th className="py-2 px-3 border-b">Nom</th>
-                    <th className="py-2 px-3 border-b">Prénom</th>
-                    <th className="py-2 px-3 border-b">Email</th>
-                    <th className="py-2 px-3 border-b">Téléphone</th>
-                    <th className="py-2 px-3 border-b">Poste</th>
-                    <th className="py-2 px-3 border-b">Rôle</th>
-                    <th className="py-2 px-3 border-b">Entreprise</th>
-                    <th className="py-2 px-3 border-b">Adresse</th>
-                    <th className="py-2 px-3 border-b">Date de naissance</th>
-                    <th className="py-2 px-3 border-b">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortedEmployees.map(emp => (
-                    <tr key={emp.id} className="text-center">
-                      <td className="py-2 px-3 border-b whitespace-nowrap">{emp.nom}</td>
-                      <td className="py-2 px-3 border-b whitespace-nowrap">{emp.prenom}</td>
-                      <td className="py-2 px-3 border-b whitespace-nowrap">{emp.email}</td>
-                      <td className="py-2 px-3 border-b whitespace-nowrap">{emp.telephone}</td>
-                      <td className="py-2 px-3 border-b whitespace-nowrap">{emp.poste}</td>
-                      <td className="py-2 px-3 border-b whitespace-nowrap">{emp.role}</td>
-                      <td className="py-2 px-3 border-b whitespace-nowrap">{emp.entreprise?.nom}</td>
-                      <td className="py-2 px-3 border-b whitespace-nowrap">{emp.adresse}</td>
-                      <td className="py-2 px-3 border-b whitespace-nowrap">{emp.dateNaissance ? (typeof emp.dateNaissance === 'string' ? emp.dateNaissance.split('T')[0] : new Date(emp.dateNaissance).toISOString().split('T')[0]) : ''}</td>
-                      <td className="py-2 px-3 border-b">
-                        <div className="flex flex-row justify-center gap-2">
-                          <button className="bg-yellow-400 hover:bg-yellow-500 text-white font-bold px-3 py-1 rounded" onClick={() => handleEdit(emp)}>Modifier</button>
-                          <button className="bg-red-500 hover:bg-red-600 text-white font-bold px-3 py-1 rounded" onClick={() => handleDelete(emp)}>Supprimer</button>
-                        </div>
-                      </td>
+            <div className="hidden sm:block pb-4" style={{overflow: 'visible'}}>
+              <div className="w-full" style={{overflow: 'visible', height: 'auto'}}>
+                <table className="w-full bg-white border border-gray-200 rounded-xl text-sm">
+                  <thead>
+                    <tr>
+                      <th className="py-2 px-3 border-b">Nom</th>
+                      <th className="py-2 px-3 border-b">Prénom</th>
+                      <th className="py-2 px-3 border-b">Email</th>
+                      <th className="py-2 px-3 border-b">Téléphone</th>
+                      <th className="py-2 px-3 border-b">Poste</th>
+                      <th className="py-2 px-3 border-b">Rôle</th>
+                      <th className="py-2 px-3 border-b">Entreprise</th>
+                      <th className="py-2 px-3 border-b">Adresse</th>
+                      <th className="py-2 px-3 border-b">Date de naissance</th>
+                      <th className="py-2 px-3 border-b">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {sortedEmployees.map(emp => (
+                      <tr key={emp.id} className="text-center">
+                        <td className="py-2 px-3 border-b truncate">{emp.nom}</td>
+                        <td className="py-2 px-3 border-b truncate">{emp.prenom}</td>
+                        <td className="py-2 px-3 border-b truncate">{emp.email}</td>
+                        <td className="py-2 px-3 border-b truncate">{emp.telephone}</td>
+                        <td className="py-2 px-3 border-b truncate">{emp.poste}</td>
+                        <td className="py-2 px-3 border-b truncate">{emp.role}</td>
+                        <td className="py-2 px-3 border-b truncate">{emp.entreprise?.nom}</td>
+                        <td className="py-2 px-3 border-b truncate">{emp.adresse}</td>
+                        <td className="py-2 px-3 border-b truncate">{emp.dateNaissance ? (typeof emp.dateNaissance === 'string' ? emp.dateNaissance.split('T')[0] : new Date(emp.dateNaissance).toISOString().split('T')[0]) : ''}</td>
+                        <td className="py-2 px-3 border-b">
+                          <div className="flex flex-row justify-center gap-2">
+                            <button className="bg-yellow-400 hover:bg-yellow-500 text-white font-bold px-3 py-1 rounded" onClick={() => handleEdit(emp)}>Modifier</button>
+                            <button className="bg-red-500 hover:bg-red-600 text-white font-bold px-3 py-1 rounded" onClick={() => handleDelete(emp)}>Supprimer</button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </div>
