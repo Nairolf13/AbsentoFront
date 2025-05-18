@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { getAbsencesSansRemplacant } from "../../api/absento";
 import { useAuth } from "../../context/AuthProvider";
 
@@ -47,7 +47,6 @@ export default function RemplacementAdminTab() {
                 )}
                 <span className="ml-2 text-xs text-gray-400">{a.date ? a.date : a.startDate ? new Date(a.startDate).toLocaleDateString() : ''}</span>
               </div>
-              {/* Bouton pour choisir un remplaçant, navigation à implémenter si besoin */}
             </li>
           ))}
         </ul>

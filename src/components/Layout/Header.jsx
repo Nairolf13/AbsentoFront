@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { getUserNotifications } from "../../api/notifications";
 import { useAuth } from "../../context/AuthProvider";
@@ -36,33 +36,17 @@ export default function Header() {
   useEffect(() => {
     const handler = () => {
       setShowAbsenceToast(true);
-      if (user) {
-        getUserNotifications(user.id).then(data => {
-          if (!Array.isArray(data)) {
-            setNotifCount(0);
-            return;
-          }
-          const unread = data.filter(n => !n.lu).length;
-          setNotifCount(unread);
-        });
-        setTimeout(() => {
-          getUserNotifications(user.id).then(data => {
-            if (!Array.isArray(data)) {
-              setNotifCount(0);
-              return;
-            }
-            const unread = data.filter(n => !n.lu).length;
-            setNotifCount(unread);
-          });
-        }, 1000);
-        setTimeout(() => {
-          setShowAbsenceToast(false);
-        }, 3000);
-      }
+
+      window.dispatchEvent(new CustomEvent("refreshNotifications"));
+      
+      // Masquer le toast après 3 secondes
+      setTimeout(() => {
+        setShowAbsenceToast(false);
+      }, 3000);
     };
     window.addEventListener("absenceCreated", handler);
     return () => window.removeEventListener("absenceCreated", handler);
-  }, [user]);
+  }, []);
 
   useEffect(() => {
     const refresh = () => {
@@ -116,19 +100,16 @@ export default function Header() {
           <span className="hidden sm:inline font-semibold">Déconnexion</span>
         </button>
       </nav>
-      {/* Toast notification absence envoyée */}
       {showAbsenceToast && (
         <div className="fixed top-6 right-6 z-50 bg-green-600 text-white px-6 py-3 rounded-xl shadow-lg animate-fade-in">
           <span>Votre absence a bien été déclarée !</span>
         </div>
       )}
-      {/* Panneau notifications */}
       {notifOpen && (
         <div className="absolute right-0 top-full mt-2 z-50">
           <Notifications onCountChange={setNotifCount} />
         </div>
       )}
-      {/* Fenêtre modale profil */}
       {profileOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
           <div className="relative bg-white rounded-xl shadow-xl p-6 max-w-lg w-full mx-2 animate-fade-in">
